@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Study Planner{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <h2 class="text-3xl font-bold tetxt-center text-gray-800 mb-6">
+            <i class="fas fa-user-plus text-blue-600"></i> Create Accoubt
+        </h2>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <!-- First Name-->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    First Name
+                </label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ form.first_name.errors.0 }}</p>
+                {% endif %}
+
+            </div>
+
+            <!-- Last Name-->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Last name
+                </label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ form.last_name.errors.0 }}</p>
+                {% endif %}
+
+            </div>
+
+            <!-- Email-->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Email
+                </label>
+                {{ form.email }}
+                {%if form.email.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</p>
+                {% endif %}
+
+            </div>
+
+            <!-- Year of Study-->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Year of Study
+                </label>
+                {{ form.year_of_study }}
+                {%if form.year_of_study.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ form.year_of_study.errors.0 }}</p>
+                {% endif %}
+
+            </div>
+
+            <!-- Course-->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Course
+                </label>
+                {{ form.course }}
+                {%if form.course.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ form.course.errors.0 }}</p>
+                {% endif %}
+
+            </div>
+
+            <!-- Password-->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Password
+                </label>
+                {{ form.password1 }}
+                {%if form.password1.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ form.password1.errors.0 }}</p>
+                {% endif %}
+                <p class="text-gray-500 text-xs mt-1">
+                    . At least 8 characters<br>
+                    . Can't be entirely numeric<br>
+                    . Can't be too similar to your other info
+
+                </p>
+
+            </div>
+
+            <!-- Confirm Password-->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Confirm Password
+                </label>
+                {{ form.password2 }}
+                {%if form.password2.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ form.password2.errors.0 }}</p>
+                {% endif %}
+
+            </div>
+
+            <!-- Submit Button-->
+            <button type="submit"
+                class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
+                <i class="fas fa-user-plus"></i> Create Account
+            </button>
+        </form>
+        <p class="tetxt-center text-gray-600 mt-6">
+            Already have an account?
+            <a href="{% url 'accounts:login' %}" class="text-blue-600 hover:underline font-semibold">
+                Login here
+            </a>
+        </p>
+
+    </div>
+
+</div>
+
+{% endblock %}

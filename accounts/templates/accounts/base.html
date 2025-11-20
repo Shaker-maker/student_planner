@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Student Study Planner{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Smooth transitions for messages */
+        .message-alert {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .message-alert.fade-out {
+            animation: slideOut 0.3s ease-out;
+            opacity: 0;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{% if user.is_authenticated %}{% url 'timetable:dashboard' %}{% else %}{% url 'accounts:login' %}{% endif %}" 
+                       class="text-2xl font-bold text-blue-600">
+                        <i class="fas fa-graduation-cap"></i> Study Planner
+                    </a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <!-- Dashboard Link -->
+                        <a href="{% url 'timetable:dashboard' %}" 
+                           class="text-gray-700 hover:text-blue-600 transition">
+                            <i class="fas fa-calendar-alt"></i> Dashboard
+                        </a>
+                        
+                        <!-- Profile Dropdown -->
+                        <div class="relative group">
+                            <button class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 focus:outline-none">
+                                {% if user.profile_picture %}
+                                    <img src="{{ user.profile_picture.url }}" 
+                                         alt="{{ user.get_full_name }}"
+                                         class="w-8 h-8 rounded-full object-cover border-2 border-blue-500">
+                                {% else %}
+                                    <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-blue-500">
+                                        {{ user.get_initials }}
+                                    </div>
+                                {% endif %}
+                                <span class="hidden md:block">{{ user.first_name }}</span>
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 hidden group-hover:block z-50">
+                                <a href="{% url 'accounts:profile' %}" 
+                                   class="block px-4 py-2 text-gray-700 hover:bg-blue-50 transition">
+                                    <i class="fas fa-user"></i> My Profile
+                                </a>
+                                <a href="{% url 'accounts:edit_profile' %}" 
+                                   class="block px-4 py-2 text-gray-700 hover:bg-blue-50 transition">
+                                    <i class="fas fa-edit"></i> Edit Profile
+                                </a>
+                                <a href="{% url 'timetable:upload_pdf' %}" 
+                                   class="block px-4 py-2 text-gray-700 hover:bg-blue-50 transition">
+                                    <i class="fas fa-upload"></i> Upload Timetable
+                                </a>
+                                <div class="border-t my-2"></div>
+                                <a href="{% url 'accounts:logout' %}" 
+                                   class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="text-gray-700 hover:text-blue-600">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                        <a href="{% url 'accounts:register' %}" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                            <i class="fas fa-user-plus"></i> Register
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Messages (success/error alerts) with Auto-Dismiss -->
+    {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4" id="messageContainer">
+            {% for message in messages %}
+                <div class="message-alert {% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% elif message.tags == 'success' %}bg-green-100 border-green-400 text-green-700{% elif message.tags == 'warning' %}bg-yellow-100 border-yellow-400 text-yellow-700{% else %}bg-blue-100 border-blue-400 text-blue-700{% endif %} px-4 py-3 rounded relative mb-4 border flex items-center justify-between" 
+                     role="alert"
+                     data-message-id="{{ forloop.counter }}">
+                    <div class="flex items-center">
+                        <i class="fas {% if message.tags == 'error' %}fa-times-circle{% elif message.tags == 'success' %}fa-check-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mr-2"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                    <button onclick="dismissMessage(this)" class="ml-4 text-lg font-bold hover:opacity-75">
+                        &times;
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}
+        {% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-600">
+            <p>&copy; 2024 Student Study Planner. Built with Django 💙</p>
+        </div>
+    </footer>
+    
+    <script>
+        // Auto-dismiss messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.message-alert');
+            
+            messages.forEach(function(message) {
+                // Auto-dismiss after 5 seconds
+                setTimeout(function() {
+                    dismissMessage(message);
+                }, 5000);
+            });
+        });
+        
+        // Manual dismiss function
+        function dismissMessage(element) {
+            // If element is a button, get the parent div
+            const messageDiv = element.classList.contains('message-alert') ? element : element.closest('.message-alert');
+            
+            // Add fade-out animation
+            messageDiv.classList.add('fade-out');
+            
+            // Remove from DOM after animation completes
+            setTimeout(function() {
+                messageDiv.remove();
+                
+                // Remove container if no messages left
+                const container = document.getElementById('messageContainer');
+                if (container && container.children.length === 0) {
+                    container.remove();
+                }
+            }, 300);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Study Planner{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">
+            <i class="fas fa-sign-in-alt text-blue-600"></i> Welcome Back!
+        </h2>
+        
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <!-- Email -->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Email
+                </label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.username.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Password -->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Password
+                </label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.password.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Non-field errors (like invalid credentials) -->
+            {% if form.non_field_errors %}
+                <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    {{ form.non_field_errors.0 }}
+                </div>
+            {% endif %}
+            
+            <!-- Forgot Password Link -->
+            <div class="mb-4 text-right">
+                <a href="{% url 'accounts:password_reset' %}" 
+                   class="text-blue-600 hover:underline text-sm">
+                    Forgot password?
+                </a>
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+        </form>
+        
+        <p class="text-center text-gray-600 mt-6">
+            Don't have an account? 
+            <a href="{% url 'accounts:register' %}" class="text-blue-600 hover:underline font-semibold">
+                Register here
+            </a>
+        </p>
+    </div>
+</div>
+{% endblock %}
