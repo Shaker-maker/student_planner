@@ -147,39 +147,65 @@
             <p>&copy; 2024 Student Study Planner. Built with Django 💙</p>
         </div>
     </footer>
-    
+  
+    <!-- Auto-dismiss messages script -->
+// ...existing code...
     <script>
-        // Auto-dismiss messages after 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            const messages = document.querySelectorAll('.message-alert');
-            
-            messages.forEach(function(message) {
-                // Auto-dismiss after 5 seconds
+        (function() {
+            // schedule a dismiss for a message element (idempotent)
+            function scheduleDismiss(el) {
+                if (!el || el.dataset.dismissScheduled) return;
+                el.dataset.dismissScheduled = '1';
                 setTimeout(function() {
-                    dismissMessage(message);
+                    dismissMessage(el);
                 }, 5000);
-            });
-        });
-        
-        // Manual dismiss function
-        function dismissMessage(element) {
-            // If element is a button, get the parent div
-            const messageDiv = element.classList.contains('message-alert') ? element : element.closest('.message-alert');
-            
-            // Add fade-out animation
-            messageDiv.classList.add('fade-out');
-            
-            // Remove from DOM after animation completes
-            setTimeout(function() {
-                messageDiv.remove();
-                
-                // Remove container if no messages left
-                const container = document.getElementById('messageContainer');
-                if (container && container.children.length === 0) {
-                    container.remove();
-                }
-            }, 300);
-        }
+            }
+
+            // core init that schedules existing messages and starts the observer
+            function init() {
+                document.querySelectorAll('.message-alert').forEach(scheduleDismiss);
+
+                // observe for messages added later (e.g. injected after navigation)
+                const container = document.getElementById('messageContainer') || document.body;
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(m) {
+                        m.addedNodes.forEach(function(node) {
+                            if (!(node instanceof HTMLElement)) return;
+                            if (node.classList && node.classList.contains('message-alert')) {
+                                scheduleDismiss(node);
+                            }
+                            node.querySelectorAll && node.querySelectorAll('.message-alert').forEach(scheduleDismiss);
+                        });
+                    });
+                });
+                observer.observe(container, { childList: true, subtree: true });
+            }
+
+            // run init now if DOM already ready, otherwise wait for DOMContentLoaded
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+            // Manual dismiss (null-safe)
+            window.dismissMessage = function(element) {
+                const messageDiv = element && element.classList && element.classList.contains('message-alert')
+                    ? element
+                    : (element && element.closest ? element.closest('.message-alert') : null);
+
+                if (!messageDiv) return;
+
+                messageDiv.classList.add('fade-out');
+
+                setTimeout(function() {
+                    if (messageDiv.parentNode) messageDiv.remove();
+                    const container = document.getElementById('messageContainer');
+                    if (container && container.children.length === 0) container.remove();
+                }, 300);
+            };
+        })();
     </script>
+        
 </body>
 </html>
