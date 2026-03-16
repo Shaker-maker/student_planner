@@ -14,7 +14,7 @@ def register_view(request):
     Handles user registration and sends verification email.
     """
     if request.user.is_authenticated:
-        return redirect('accounts:profie')
+        return redirect('timetable:dashboard')
     
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
@@ -97,7 +97,7 @@ def login_view(request):
     Handles user login.
     """
     if request.user.is_authenticated:
-        return redirect('accounts:profile')
+        return redirect('timetable:dashboard')
     
     if request.method == 'POST':
         form = LoginForm(data=request.POST)
@@ -113,7 +113,7 @@ def login_view(request):
                     messages.success(request, f'Welcome back, {user.first_name}! 👋🏽')
                     
                     # Redirect to 'next' parameter if exists, else dashboard
-                    next_url = request.GET.get('next', 'accounts:profile')
+                    next_url = request.GET.get('next', 'timetable:dashboard')
                     return redirect(next_url)
                 else:
                     messages.error(request, 'Please verify your email before logging in.')

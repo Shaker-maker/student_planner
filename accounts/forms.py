@@ -47,6 +47,17 @@ class RegistrationForm(UserCreationForm):
             'placeholder': 'Computer Science'
         })
     )
+    semester = forms.ChoiceField(
+        choices=[
+            ('', 'Select Semester'),
+            (1, 'Semester 1'),
+            (2, 'Semester 2'),
+        ],
+        widget=forms.Select(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+        }),
+        required=True
+    )
     password1 = forms.CharField(
         label='Password',
         widget=forms.PasswordInput(attrs={
@@ -64,7 +75,7 @@ class RegistrationForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'year_of_study','course', 'password1', 'password2']
+        fields = ['email', 'first_name', 'last_name', 'year_of_study', 'course', 'semester', 'password1', 'password2']
 
     
     def clean_email(self):
@@ -75,6 +86,20 @@ class RegistrationForm(UserCreationForm):
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError('A user with this email already exists.')
         return email
+    
+    def clean_year_of_study(self):
+        """Convert year to integer"""
+        year = self.cleaned_data.get('year_of_study')
+        if year:
+            return int(year)
+        return year
+    
+    def clean_semester(self):
+        """Convert semester to integer"""
+        semester = self.cleaned_data.get('semester')
+        if semester:
+            return int(semester)
+        return semester
     
 class LoginForm(AuthenticationForm):
     """

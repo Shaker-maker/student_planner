@@ -13,7 +13,7 @@
 
 </head>
 
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 min-h-screen flex flex-col">
 
     <!-- Navigation Bar-->
      <nav class="bg-white shadow-lg">
@@ -55,7 +55,7 @@
     {% if messages %}
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
             {% for message in messages %}
-                <div class="{% if message.tage == 'error' %} bg-red-100 border-red-400 text-red-700{% elif message.tags == 'success' %}bg-green-100 border-green-400 text-green-700{% else %}bg-blue-100 border-blue-400 text-blue-700{% endif %} px-4 py-3 rounded relative mb-4 border" role="alert">
+                <div class="alert-message {% if message.tage == 'error' %} bg-red-100 border-red-400 text-red-700{% elif message.tags == 'success' %}bg-green-100 border-green-400 text-green-700{% else %}bg-blue-100 border-blue-400 text-blue-700{% endif %} px-4 py-3 rounded relative mb-4 border transition-opacity duration-500" role="alert">
                     <span class="block sm:inline">{{ message }}</span>
                 </div>
             {% endfor %}
@@ -66,7 +66,7 @@
 
 
     <!-- Main Content-->
-     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         {% block content %}
         {% endblock %}
      </main>
@@ -77,6 +77,23 @@
             <p>&copy; 2026 Student Study Planner. Built with Django 💙</p>
         </div>
     </footer>
+
+    <!-- Auto-hide success messages after 3 seconds -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.alert-message');
+            messages.forEach(message => {
+                // Set timeout to fade out after 3 seconds
+                setTimeout(() => {
+                    message.style.opacity = '0';
+                    // Remove from DOM after fade completes
+                    setTimeout(() => {
+                        message.remove();
+                    }, 500);
+                }, 3000);
+            });
+        });
+    </script>
 
 </body>
 

@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Class - Study Planner{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-plus-circle text-green-600"></i> Add Class Manually
+        </h2>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Unit Code -->
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Unit Code
+                    </label>
+                    {{ form.unit_code }}
+                    {% if form.unit_code.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.unit_code.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Unit Name -->
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Unit Name *
+                    </label>
+                    {{ form.unit_name }}
+                    {% if form.unit_name.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.unit_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <!-- Venue -->
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Venue *
+                    </label>
+                    {{ form.venue }}
+                    {% if form.venue.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.venue.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Lecturer -->
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Lecturer
+                    </label>
+                    {{ form.lecturer }}
+                    {% if form.lecturer.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.lecturer.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Day of Week -->
+            <div class="mt-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Day of Week *
+                </label>
+                {{ form.day_of_week }}
+                {% if form.day_of_week.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.day_of_week.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <!-- Start Time -->
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Start Time *
+                    </label>
+                    {{ form.start_time }}
+                    {% if form.start_time.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.start_time.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- End Time -->
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        End Time *
+                    </label>
+                    {{ form.end_time }}
+                    {% if form.end_time.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.end_time.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Class Type -->
+            <div class="mt-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Class Type
+                </label>
+                {{ form.class_type }}
+                {% if form.class_type.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.class_type.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Non-field errors -->
+            {% if form.non_field_errors %}
+                <div class="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    {{ form.non_field_errors.0 }}
+                </div>
+            {% endif %}
+            
+            <!-- Buttons -->
+            <div class="flex gap-4 mt-6">
+                <button type="submit" 
+                        class="flex-1 bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition">
+                    <i class="fas fa-save"></i> Add Class
+                </button>
+                <a href="{% url 'timetable:dashboard' %}" 
+                   class="flex-1 bg-gray-300 text-gray-700 font-bold py-3 px-4 rounded-lg hover:bg-gray-400 transition text-center">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

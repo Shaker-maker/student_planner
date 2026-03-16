@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'study_planner.middleware.NoCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -137,16 +138,27 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'accounts.User'
 
 #Email COnfiguration(For sending verification emails)
-#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' #Prints to console
-#I'll change this to Gmail SMTP later
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Uses a custom dual backend: sends real emails via Gmail SMTP + prints to console for debugging
+# This way you can see emails both sent AND logged during development
+
+EMAIL_BACKEND = 'study_planner.email_backend.DualEmailBackend'
+
+# Gmail SMTP Configuration (for actual email sending)
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-import os
-
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+# Get credentials from environment variables
+# You need to set these for Gmail to work:
+#   export EMAIL_HOST_USER="wainainaalvin76@gmail.com"
+#   export EMAIL_HOST_PASSWORD="your-16-character-app-password"
+# 
+# To get Gmail App Password:
+# 1. Go to https://myaccount.google.com/apppasswords
+# 2. Select Mail + Linux
+# 3. Google will generate a 16-char password
+# 4. Use that password in the export command above
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'wainainaalvin76@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
 DEFAULT_FROM_EMAIL = 'Student Study Planner <wainainaalvin76@gmail.com>'
@@ -155,3 +167,28 @@ DEFAULT_FROM_EMAIL = 'Student Study Planner <wainainaalvin76@gmail.com>'
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'timetable:dashboard'
 LOGOUT_REDIRECT_URL = 'accounts:login'
+
+# ========================================
+# SESSION & SECURITY CONFIGURATION
+# ========================================
+# Session security settings to prevent unauthorized access after logout
+
+# Expire session when browser closes (no "remember me" cookies)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Session expires after 30 minutes of inactivity
+SESSION_COOKIE_AGE = 1800  # 30 minutes in seconds
+
+# Make session cookies secure (HTTPS only in production)
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
+SESSION_COOKIE_SAMESITE = 'Strict'  # Prevent CSRF attacks
+
+# Prevent user session from persisting in cache
+# This ensures pages cannot be accessed via browser back button after logout
+CACHE_MIDDLEWARE_SECONDS = 0
+
+# CSRF settings for additional protection
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Strict'

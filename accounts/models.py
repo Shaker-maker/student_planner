@@ -71,6 +71,14 @@ class User(AbstractBaseUser, PermissionsMixin):
             (5, 'Year 5'),
         ]
     )
+    semester = models.IntegerField(
+        default=1,
+        choices=[
+            (1, 'Semester 1'),
+            (2, 'Semester 2'),
+        ],
+        help_text="Current semester (1 or 2)"
+    )
     course = models.CharField(max_length=200, blank=True)
     profile_picture = models.ImageField(
         upload_to='profile_pictures/',

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Timetable PDF - Study Planner{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <div class="text-center mb-6">
+            <i class="fas fa-cloud-upload-alt text-blue-600 text-6xl mb-4"></i>
+            <h2 class="text-3xl font-bold text-gray-800">Upload Timetable PDF</h2>
+            <p class="text-gray-600 mt-2">
+                Upload your faculty timetable and our AI will automatically extract your schedule
+            </p>
+        </div>
+        
+        <!-- AI Features Info -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 class="font-bold text-blue-800 mb-2">
+                <i class="fas fa-robot"></i> AI-Powered Extraction:
+            </h3>
+            <ol class="list-decimal list-inside text-sm text-blue-900 space-y-1">
+                <li><strong>Computer Vision</strong> detects tables in your PDF</li>
+                <li><strong>NLP</strong> identifies unit names, lecturers, venues, and times</li>
+                <li>System automatically filters for <strong>Year {{ user.year_of_study }}</strong></li>
+                <li>Each entry gets a <strong>confidence score</strong> showing accuracy</li>
+                <li>You review and verify the extracted entries</li>
+            </ol>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data" id="uploadForm">
+            {% csrf_token %}
+            
+            <!-- File Upload -->
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    <i class="fas fa-file-pdf text-red-600"></i> Timetable PDF *
+                </label>
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition">
+                    {{ form.file }}
+                    <p class="text-gray-500 text-sm mt-2">
+                        <i class="fas fa-upload"></i> Click to browse or drag and drop
+                    </p>
+                    <p class="text-gray-400 text-xs mt-1">Max file size: 10MB</p>
+                </div>
+                {% if form.file.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.file.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Timetable Type -->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Timetable Type *
+                </label>
+                {{ form.timetable_type }}
+                {% if form.timetable_type.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.timetable_type.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Academic Year -->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Academic Year (Optional)
+                </label>
+                {{ form.academic_year }}
+                {% if form.academic_year.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.academic_year.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Semester -->
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Semester (Optional)
+                </label>
+                {{ form.semester }}
+                {% if form.semester.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.semester.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" 
+                    class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
+                    id="submitBtn">
+                <i class="fas fa-magic"></i> Upload & Extract with AI
+            </button>
+            
+            <!-- Loading State -->
+            <div id="loadingState" class="hidden mt-4 text-center">
+                <i class="fas fa-spinner fa-spin text-blue-600 text-3xl"></i>
+                <p class="text-gray-600 mt-2 font-semibold">Processing your timetable with AI...</p>
+                <p class="text-gray-500 text-sm mt-1">This may take 10-30 seconds</p>
+                <div class="mt-4">
+                    <div class="flex items-center justify-center space-x-2 text-sm text-gray-600">
+                        <span class="animate-pulse">📊 Detecting tables...</span>
+                    </div>
+                </div>
+            </div>
+        </form>
+        
+        <div class="mt-6 text-center">
+            <a href="{% url 'timetable:dashboard' %}" class="text-gray-600 hover:underline">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Show loading state on form submit
+    document.getElementById('uploadForm').addEventListener('submit', function() {
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitBtn').classList.add('opacity-50', 'cursor-not-allowed');
+        document.getElementById('loadingState').classList.remove('hidden');
+    });
+</script>
+{% endblock %}

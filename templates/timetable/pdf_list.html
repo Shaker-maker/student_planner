@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}PDF Timetables - Study Planner{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">
+                <i class="fas fa-file-pdf text-red-600"></i> My Timetable PDFs
+            </h1>
+            <p class="text-gray-600 mt-1">Manage and view your uploaded PDF timetables</p>
+        </div>
+        <a href="{% url 'timetable:upload_pdf' %}" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+            <i class="fas fa-upload"></i> Upload New PDF
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+            <div class="{% if message.tags == 'success' %}bg-green-100 border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-blue-100 border-blue-400 text-blue-700{% endif %} px-4 py-3 rounded border mb-4">
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if pdfs %}
+    <!-- Filter Section -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <div class="flex flex-wrap gap-4">
+            <div>
+                <label class="text-sm font-medium text-gray-700">Filter by Status:</label>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="filterByStatus('all')" class="px-4 py-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 text-sm font-medium status-filter" data-status="all">
+                        All
+                    </button>
+                    <button onclick="filterByStatus('completed')" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm font-medium status-filter" data-status="completed">
+                        Completed
+                    </button>
+                    <button onclick="filterByStatus('processing')" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm font-medium status-filter" data-status="processing">
+                        Processing
+                    </button>
+                    <button onclick="filterByStatus('failed')" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm font-medium status-filter" data-status="failed">
+                        Failed
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDFs Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for pdf in pdfs %}
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition pdf-card" data-status="{{ pdf.processing_status }}">
+                <!-- PDF Header -->
+                <div class="bg-gradient-to-r from-red-500 to-red-600 p-4 text-white">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="text-sm opacity-90">{{ pdf.original_filename }}</p>
+                            <p class="text-xs opacity-75">{{ pdf.get_file_size_display }}</p>
+                        </div>
+                        <i class="fas fa-file-pdf text-2xl"></i>
+                    </div>
+                </div>
+
+                <!-- PDF Details -->
+                <div class="p-4 space-y-3">
+                    <!-- Status Badge -->
+                    <div class="flex items-center gap-2">
+                        {% if pdf.processing_status == 'completed' %}
+                            <span class="inline-block bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                <i class="fas fa-check-circle"></i> Completed
+                            </span>
+                        {% elif pdf.processing_status == 'processing' %}
+                            <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                <i class="fas fa-spinner fa-spin"></i> Processing
+                            </span>
+                        {% elif pdf.processing_status == 'failed' %}
+                            <span class="inline-block bg-red-100 text-red-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                <i class="fas fa-exclamation-circle"></i> Failed
+                            </span>
+                        {% else %}
+                            <span class="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                <i class="fas fa-hourglass"></i> Pending
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- PDF Info -->
+                    <div class="text-sm">
+                        <p class="text-gray-600">
+                            <strong>Type:</strong> {{ pdf.get_timetable_type_display }}
+                        </p>
+                        {% if pdf.academic_year %}
+                            <p class="text-gray-600">
+                                <strong>Year:</strong> {{ pdf.academic_year }}
+                            </p>
+                        {% endif %}
+                        {% if pdf.semester %}
+                            <p class="text-gray-600">
+                                <strong>Semester:</strong> {{ pdf.semester }}
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Extraction Stats -->
+                    {% if pdf.is_processed %}
+                        <div class="border-t pt-3 space-y-1 text-sm">
+                            <div class="flex justify-between text-gray-700">
+                                <span>Tables Detected:</span>
+                                <strong>{{ pdf.tables_detected }}</strong>
+                            </div>
+                            <div class="flex justify-between text-gray-700">
+                                <span>Entries Extracted:</span>
+                                <strong>{{ pdf.entries_extracted }}</strong>
+                            </div>
+                            <div class="flex justify-between text-gray-700">
+                                <span>Avg. Confidence:</span>
+                                <strong>{{ pdf.average_confidence|floatformat:2 }}%</strong>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Timestamps -->
+                    <div class="text-xs text-gray-500 border-t pt-3">
+                        <p>Uploaded: {{ pdf.created_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="bg-gray-50 p-4 border-t flex gap-2">
+                    <a href="{% url 'timetable:pdf_detail' pdf.id %}" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-center text-sm font-medium">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                    {% if pdf.processing_status != 'processing' %}
+                        <a href="{% url 'timetable:delete_pdf' pdf.id %}" class="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition text-center text-sm font-medium">
+                            <i class="fas fa-trash"></i> Delete
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-lg shadow-lg p-12 text-center">
+        <i class="fas fa-inbox text-gray-300 text-6xl mb-4"></i>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">No PDFs Uploaded Yet</h2>
+        <p class="text-gray-600 mb-6">Start by uploading a timetable PDF to extract and manage your classes.</p>
+        <a href="{% url 'timetable:upload_pdf' %}" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition inline-block font-medium">
+            <i class="fas fa-upload"></i> Upload Your First PDF
+        </a>
+    </div>
+{% endif %}
+
+<script>
+    function filterByStatus(status) {
+        const cards = document.querySelectorAll('.pdf-card');
+        const buttons = document.querySelectorAll('.status-filter');
+        
+        // Update button styles
+        buttons.forEach(btn => {
+            if (btn.dataset.status === status) {
+                btn.classList.remove('bg-gray-100', 'text-gray-700');
+                btn.classList.add('bg-blue-100', 'text-blue-700');
+            } else {
+                btn.classList.remove('bg-blue-100', 'text-blue-700');
+                btn.classList.add('bg-gray-100', 'text-gray-700');
+            }
+        });
+        
+        // Filter cards
+        cards.forEach(card => {
+            if (status === 'all' || card.dataset.status === status) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}

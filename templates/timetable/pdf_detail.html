@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load timetable_extras %}
+
+{% block title %}PDF Details - Study Planner{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <a href="{% url 'timetable:pdf_list' %}" class="text-blue-600 hover:text-blue-700">
+        <i class="fas fa-arrow-left"></i> Back to PDFs
+    </a>
+</div>
+
+<!-- PDF Header Info -->
+<div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+    <div class="flex justify-between items-start mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-file-pdf text-red-600"></i> {{ pdf.original_filename }}
+            </h1>
+            <p class="text-gray-600">
+                <i class="fas fa-calendar"></i> Uploaded {{ pdf.created_at|date:"M d, Y H:i" }}
+            </p>
+        </div>
+        <div class="text-right">
+            {% if pdf.processing_status == 'completed' %}
+                <span class="inline-block bg-green-100 text-green-800 text-sm font-semibold px-4 py-2 rounded-full mb-2">
+                    <i class="fas fa-check-circle"></i> Completed
+                </span>
+            {% elif pdf.processing_status == 'processing' %}
+                <span class="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-4 py-2 rounded-full mb-2">
+                    <i class="fas fa-spinner fa-spin"></i> Processing
+                </span>
+            {% elif pdf.processing_status == 'failed' %}
+                <span class="inline-block bg-red-100 text-red-800 text-sm font-semibold px-4 py-2 rounded-full mb-2">
+                    <i class="fas fa-exclamation-circle"></i> Failed
+                </span>
+            {% else %}
+                <span class="inline-block bg-yellow-100 text-yellow-800 text-sm font-semibold px-4 py-2 rounded-full mb-2">
+                    <i class="fas fa-hourglass"></i> Pending
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- PDF Metadata Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <p class="text-sm text-gray-600">Type</p>
+            <p class="text-lg font-semibold text-gray-800">{{ pdf.get_timetable_type_display }}</p>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <p class="text-sm text-gray-600">File Size</p>
+            <p class="text-lg font-semibold text-gray-800">{{ pdf.get_file_size_display }}</p>
+        </div>
+        {% if pdf.academic_year %}
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-sm text-gray-600">Academic Year</p>
+                <p class="text-lg font-semibold text-gray-800">{{ pdf.academic_year }}</p>
+            </div>
+        {% endif %}
+        {% if pdf.semester %}
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-sm text-gray-600">Semester</p>
+                <p class="text-lg font-semibold text-gray-800">{{ pdf.semester }}</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Processing Details (if processed) -->
+{% if pdf.is_processed %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="bg-blue-100 rounded-full p-3">
+                    <i class="fas fa-table text-blue-600 text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-600 text-sm">Tables Detected</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ pdf.tables_detected }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="bg-green-100 rounded-full p-3">
+                    <i class="fas fa-book text-green-600 text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-600 text-sm">Entries Extracted</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ pdf.entries_extracted }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="bg-purple-100 rounded-full p-3">
+                    <i class="fas fa-chart-pie text-purple-600 text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-600 text-sm">Avg. Confidence</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ pdf.average_confidence|floatformat:1 }}%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Processing Info -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">
+            <i class="fas fa-cog text-gray-600"></i> Processing Details
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <p class="text-sm text-gray-600">Extraction Method</p>
+                <p class="font-semibold text-gray-800">{{ pdf.get_extraction_method_display }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Processing Time</p>
+                <p class="font-semibold text-gray-800">{{ pdf.processing_time_seconds|floatformat:2 }}s</p>
+            </div>
+        </div>
+        {% if pdf.error_message %}
+            <div class="mt-4 bg-red-50 border border-red-200 rounded p-3">
+                <p class="text-sm text-red-800">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>Error:</strong> {{ pdf.error_message }}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+{% endif %}
+
+<!-- Extracted Entries Grouped by Day -->
+{% if entries %}
+    <div class="mb-6">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white rounded-lg">
+            <h2 class="text-2xl font-bold">
+                <i class="fas fa-calendar-week"></i> Weekly Timetable
+            </h2>
+            <p class="text-blue-100 mt-1">{{ entries.count }} class{{ entries.count|pluralize }} found</p>
+        </div>
+    </div>
+
+    {% regroup entries by get_day_of_week_display as entries_by_day %}
+    
+    {% for day in entries_by_day %}
+        <!-- Day Section -->
+        <div class="bg-white rounded-lg shadow-lg mb-6 overflow-hidden">
+            <!-- Day Header -->
+            <div class="bg-gradient-to-r from-indigo-500 to-blue-500 p-4 text-white">
+                <h3 class="text-xl font-bold flex items-center gap-2">
+                    <i class="fas fa-calendar-day"></i>
+                    {{ day.grouper }}
+                </h3>
+                <p class="text-indigo-100 text-sm mt-1">{{ day.list|length }} class{{ day.list|length|pluralize }}</p>
+            </div>
+
+            <!-- Classes for this day -->
+            <div class="divide-y">
+                {% for entry in day.list %}
+                    <div class="p-6 hover:bg-gray-50 transition">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                            <!-- Time -->
+                            <div class="md:col-span-2">
+                                <p class="text-xs text-gray-500 font-semibold uppercase">Time</p>
+                                <p class="text-lg font-bold text-gray-800">{{ entry.get_time_range }}</p>
+                            </div>
+
+                            <!-- Unit Code & Name -->
+                            <div class="md:col-span-4">
+                                <p class="text-xs text-gray-500 font-semibold uppercase">Course</p>
+                                <p class="text-sm font-bold text-gray-800">{{ entry.unit_code }}</p>
+                                <p class="text-sm text-gray-600">{{ entry.unit_name }}</p>
+                            </div>
+
+                            <!-- Venue -->
+                            <div class="md:col-span-2">
+                                <p class="text-xs text-gray-500 font-semibold uppercase">Venue</p>
+                                <p class="text-sm font-medium text-gray-800">
+                                    {% if entry.venue %}
+                                        {{ entry.venue }}
+                                    {% else %}
+                                        <span class="text-gray-400">—</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <!-- Lecturer -->
+                            <div class="md:col-span-2">
+                                <p class="text-xs text-gray-500 font-semibold uppercase">Lecturer</p>
+                                <p class="text-sm font-medium text-gray-800">
+                                    {% if entry.lecturer %}
+                                        {{ entry.lecturer|truncatewords:2 }}
+                                    {% else %}
+                                        <span class="text-gray-400">—</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <!-- Confidence Badge -->
+                            <div class="md:col-span-1">
+                                <p class="text-xs text-gray-500 font-semibold uppercase">Confidence</p>
+                                <div class="mt-1">
+                                    {% if entry.confidence_score >= 0.8 %}
+                                        <span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">
+                                            {{ entry.confidence_score|floatformat:0 }}%
+                                        </span>
+                                    {% elif entry.confidence_score >= 0.6 %}
+                                        <span class="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-semibold">
+                                            {{ entry.confidence_score|floatformat:0 }}%
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-semibold">
+                                            {{ entry.confidence_score|floatformat:0 }}%
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Action Button -->
+                            <div class="md:col-span-1 flex items-end">
+                                <a href="{% url 'timetable:edit_entry' entry.id %}" class="text-blue-600 hover:text-blue-800 font-medium text-sm py-1 px-2 hover:bg-blue-50 rounded transition w-full text-center">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Status Row -->
+                        <div class="mt-3 pt-3 border-t border-gray-100">
+                            <div class="flex items-center justify-between">
+                                {% if entry.is_verified %}
+                                    <span class="inline-block bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                        <i class="fas fa-check-circle"></i> Verified
+                                    </span>
+                                {% else %}
+                                    <span class="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                        <i class="fas fa-exclamation-circle"></i> Pending Review
+                                    </span>
+                                {% endif %}
+
+                                {% if entry.class_type %}
+                                    <span class="text-gray-500 text-xs">{{ entry.class_type }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="bg-white rounded-lg shadow p-12 text-center">
+        <i class="fas fa-inbox text-gray-300 text-4xl mb-4"></i>
+        <p class="text-gray-600">No entries extracted from this PDF yet.</p>
+        {% if pdf.processing_status == 'pending' %}
+            <p class="text-gray-500 text-sm mt-2">Processing will begin shortly...</p>
+        {% elif pdf.processing_status == 'failed' %}
+            <p class="text-red-600 text-sm mt-2">Failed to process. Please try a different extraction method or upload another PDF.</p>
+        {% endif %}
+    </div>
+{% endif %}
+
+<!-- Action Buttons -->
+<div class="mt-8 flex gap-4">
+    <a href="{% url 'timetable:pdf_list' %}" class="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition font-medium">
+        <i class="fas fa-arrow-left"></i> Back to List
+    </a>
+    <a href="{% url 'timetable:dashboard' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium">
+        <i class="fas fa-home"></i> Dashboard
+    </a>
+    <a href="{% url 'timetable:delete_pdf' pdf.id %}" class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition font-medium ml-auto">
+        <i class="fas fa-trash"></i> Delete PDF
+    </a>
+</div>
+{% endblock %}
