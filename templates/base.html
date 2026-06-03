@@ -8,8 +8,18 @@
     <!--Tailwind CSS-->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- FOnt Awesome for icons-->
-    <link rel="stylesheet" href="https://cdnjs.cloudfare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Brand Colors CSS Variables -->
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #eff6ff;
+            --primary-text: #ffffff;
+        }
+    </style>
+
+    <!-- Font Awesome for icons-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 </head>
 
@@ -20,7 +30,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <a href="{% url 'accounts:login' %}" class="text-2xl font-bold text-blue-600">
+                    <a href="{% if user.is_authenticated %}{% url 'timetable:home' %}{% else %}{% url 'landing' %}{% endif %}" class="text-2xl font-bold text-blue-600">
                         <i class="fas fa-graduation-cap"></i> Study Planner
                     </a>
                 </div>
@@ -30,6 +40,10 @@
                         <a href="{% url 'accounts:profile' %}" class="text-gray-700 hover:text-blue-600">
                             <i class="fas fa-user"></i> Profile
                         </a>
+                        <!-- User Avatar -->
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm border-2" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-color: var(--primary-light);">
+                            {{ user.get_initials }}
+                        </div>
                         <a href="{% url 'accounts:logout' %}" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </a>

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Account - Student Study Planner{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <div class="text-red-500 text-4xl mb-2">⚠️</div>
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Delete Account</h1>
+            <p class="text-gray-600">This action cannot be undone</p>
+        </div>
+
+        <!-- Warning Message -->
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p class="text-red-800 text-sm font-medium">
+                ⚠️ <strong>Warning:</strong> Deleting your account will permanently remove:
+            </p>
+            <ul class="text-red-700 text-sm mt-3 space-y-1 ml-4">
+                <li>✗ Your user profile and email</li>
+                <li>✗ All timetable entries and schedules</li>
+                <li>✗ All tasks and reminders</li>
+                <li>✗ All uploaded PDFs</li>
+                <li>✗ All notifications and preferences</li>
+                <li>✗ Your profile picture</li>
+            </ul>
+            <p class="text-red-800 text-sm font-medium mt-3">
+                This action <strong>cannot be undone</strong>.
+            </p>
+        </div>
+
+        <!-- Account Info -->
+        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+            <p class="text-gray-700 text-sm">
+                <strong>Account:</strong> {{ user.email }}
+            </p>
+            <p class="text-gray-700 text-sm">
+                <strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}
+            </p>
+        </div>
+
+        <!-- Confirmation -->
+        <div class="mb-6">
+            <p class="text-gray-700 text-sm mb-2">
+                To delete your account, click the button below:
+            </p>
+        </div>
+
+        <!-- Form -->
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            
+            <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                <span>🗑️</span>
+                <span>Delete My Account Permanently</span>
+            </button>
+
+            <a href="{% url 'accounts:profile' %}" class="w-full block text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-200">
+                Cancel
+            </a>
+        </form>
+
+        <!-- Info Footer -->
+        <p class="text-gray-500 text-xs text-center mt-6">
+            If you have any questions, please <a href="mailto:support@studentstudyplanner.com" class="text-blue-600 hover:underline">contact support</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

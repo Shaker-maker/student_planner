@@ -100,14 +100,23 @@ class TimetableEntry(models.Model):
     # Extracted data
     unit_code = models.CharField(max_length=20, blank=True, help_text="e.g., CSC 301")
     unit_name = models.CharField(max_length=200, help_text="e.g., Database Systems")
-    venue = models.CharField(max_length=100, help_text="e.g., LR5, Lab 2")
+    unit_catalog = models.ForeignKey(
+        'UnitCatalog', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='timetable_entries',
+        help_text="Link to master unit catalog for accurate unit names"
+    )
+    venue = models.CharField(max_length=100, blank=True, default="", help_text="e.g., LR5, Lab 2")
     lecturer = models.CharField(max_length=200, blank=True)
     
     # Timing
     day_of_week = models.CharField(max_length=10, choices=DAY_CHOICES)
     start_time = models.TimeField(help_text="e.g., 08:00")
     end_time = models.TimeField(help_text="e.g., 10:00")
-    duration_hours = models.IntegerField(help_text="Duration in hours")
+    duration_hours = models.DecimalField(max_digits=5, decimal_places=2, default=1, help_text="Duration in hours (e.g., 1.5 for 90 min)")
+    duration_minutes = models.IntegerField(default=60, help_text="Exact duration in minutes for precision")
     
     # Additional info
     class_type = models.CharField(max_length=50, blank=True, help_text="e.g., Lecture, Lab, Tutorial")
@@ -138,6 +147,21 @@ class TimetableEntry(models.Model):
     def __str__(self):
         return f"{self.unit_name} - {self.get_day_of_week_display()} {self.start_time}"
     
+    def get_display_name(self):
+        """
+        Get the proper unit name for display.
+        Prefers catalog entry name, falls back to stored name.
+        """
+        if self.unit_catalog:
+            return self.unit_catalog.unit_name
+        return self.unit_name
+    
+    def get_display_code(self):
+        """Get unit code (may differ from stored code if from catalog)."""
+        if self.unit_catalog:
+            return self.unit_catalog.unit_code
+        return self.unit_code
+    
     def get_time_range(self):
         """Returns formatted time range (e.g., '08:00 - 10:00')."""
         return f"{self.start_time.strftime('%H:%M')} - {self.end_time.strftime('%H:%M')}"
@@ -165,6 +189,54 @@ class TimetableEntry(models.Model):
             return "text-yellow-600"
         else:
             return "text-red-600"
+
+
+class UnitCatalog(models.Model):
+    """
+    Master catalog of academic units/courses with their proper names.
+    Maps unit codes to human-readable names.
+    
+    Example:
+        Code: "CCS 2422" → Name: "Data Structures and Algorithms"
+        Code: "CSE 2400" → Name: "Software Engineering Project"
+    """
+    unit_code = models.CharField(
+        max_length=20, 
+        unique=True, 
+        help_text="e.g., CCS 2422, CSE 2418"
+    )
+    unit_name = models.CharField(
+        max_length=255,
+        help_text="Full unit name e.g., Data Structures"
+    )
+    department = models.CharField(
+        max_length=100, 
+        blank=True,
+        help_text="Department offering the unit"
+    )
+    credits = models.IntegerField(
+        blank=True, 
+        null=True,
+        help_text="Unit credits/points"
+    )
+    description = models.TextField(
+        blank=True,
+        help_text="Unit description"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this unit is currently offered"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Unit Catalog Entry'
+        verbose_name_plural = 'Unit Catalog'
+        ordering = ['unit_code']
+    
+    def __str__(self):
+        return f"{self.unit_code} - {self.unit_name}"
 
 
 class ExtractionLog(models.Model):

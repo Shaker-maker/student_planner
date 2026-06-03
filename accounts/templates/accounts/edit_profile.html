@@ -27,7 +27,7 @@
                              class="w-32 h-32 rounded-full object-cover mx-auto border-4 border-blue-500"
                              id="previewImage">
                     {% else %}
-                        <div class="w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-4xl font-bold border-4 border-blue-500 mx-auto"
+                        <div class="w-32 h-32 rounded-full flex items-center justify-center text-white text-4xl font-bold border-4 mx-auto" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-color: var(--primary);"
                              id="previewInitials">
                             {{ user.get_initials }}
                         </div>
@@ -89,6 +89,20 @@
                 {% if form.year_of_study.errors %}
                     <p class="text-red-500 text-xs mt-1">{{ form.year_of_study.errors.0 }}</p>
                 {% endif %}
+            </div>
+            
+            <!-- Semester -->
+            <div class="mt-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Current Semester
+                </label>
+                {{ form.semester }}
+                {% if form.semester.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.semester.errors.0 }}</p>
+                {% endif %}
+                <p class="text-gray-500 text-xs mt-1">
+                    📅 Make sure this matches your timetable PDF to extract the correct schedule
+                </p>
             </div>
             
             <!-- Course -->

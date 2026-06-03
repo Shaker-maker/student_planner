@@ -4,6 +4,9 @@ from . import views
 app_name = 'timetable'
 
 urlpatterns = [
+    # Home Dashboard
+    path('home/', views.home_dashboard_view, name='home'),
+    
     # Dashboard
     path('', views.dashboard_view, name='dashboard'),
     

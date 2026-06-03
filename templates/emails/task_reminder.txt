@@ -1,0 +1,19 @@
+{{ message }}
+
+---
+
+Task: {{ task.name }}
+Unit: {{ task.unit_name }}
+Type: {% if task.task_type == 'assignment' %}Assignment{% else %}CAT{% endif %}
+Due: {{ task.due_date|date:"M d, Y H:i" }}
+
+{% if task.description %}Description:
+{{ task.description }}
+{% endif %}
+
+---
+
+To view or update this task, visit your task dashboard.
+
+Best regards,
+Study Planner Team

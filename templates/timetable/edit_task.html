@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Edit Task - Study Planner{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Breadcrumb -->
+    <div class="mb-8">
+        <div class="flex items-center text-sm text-gray-600 gap-2">
+            <a href="{% url 'timetable:dashboard' %}" class="text-blue-600 hover:underline">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <a href="{% url 'tasks:dashboard' %}" class="text-blue-600 hover:underline">Tasks</a>
+            <i class="fas fa-chevron-right"></i>
+            <a href="{% url 'tasks:detail' task.id %}" class="text-blue-600 hover:underline">{{ task.name }}</a>
+            <i class="fas fa-chevron-right"></i>
+            <span class="text-gray-500">Edit</span>
+        </div>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+            <h1 class="text-2xl font-bold mb-2">
+                <i class="fas fa-edit"></i> Edit Task
+            </h1>
+            <p class="text-blue-100">Update task details as needed</p>
+        </div>
+
+        <div class="p-8">
+            <form method="post" id="taskForm">
+                {% csrf_token %}
+
+                <!-- Task Name -->
+                <div class="mb-6">
+                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        {{ form.name.label }} <span class="text-red-600">*</span>
+                    </label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <div class="mt-2 text-red-600 text-sm">{{ form.name.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Unit Name -->
+                <div class="mb-6">
+                    <label for="{{ form.unit_name.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        {{ form.unit_name.label }} <span class="text-red-600">*</span>
+                    </label>
+                    {{ form.unit_name }}
+                    {% if form.unit_name.errors %}
+                        <div class="mt-2 text-red-600 text-sm">{{ form.unit_name.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Task Type & Status Row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label for="{{ form.task_type.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                            {{ form.task_type.label }}
+                        </label>
+                        {{ form.task_type }}
+                        {% if form.task_type.errors %}
+                            <div class="mt-2 text-red-600 text-sm">{{ form.task_type.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.status.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                            {{ form.status.label }}
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            <div class="mt-2 text-red-600 text-sm">{{ form.status.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Due Date -->
+                <div class="mb-6">
+                    <label for="{{ form.due_date.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        {{ form.due_date.label }} <span class="text-red-600">*</span>
+                    </label>
+                    {{ form.due_date }}
+                    {% if form.due_date.errors %}
+                        <div class="mt-2 text-red-600 text-sm">{{ form.due_date.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div class="mb-6">
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        {{ form.description.label }}
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="mt-2 text-red-600 text-sm">{{ form.description.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Info Box -->
+                <div class="bg-blue-50 border-l-4 border-blue-600 p-4 mb-6">
+                    <p class="text-blue-900 text-sm">
+                        <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                        <strong>Note:</strong> Changing task details will update reminders accordingly for future days.
+                    </p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4">
+                    <button type="submit" class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-semibold">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <a href="{% url 'tasks:detail' task.id %}" class="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition font-semibold text-center">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Task Info Summary -->
+        <div class="bg-gray-50 p-6 border-t">
+            <h3 class="font-semibold text-gray-800 mb-4">
+                <i class="fas fa-info-circle text-blue-600"></i> Task Summary
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-gray-600 text-sm">Created</p>
+                    <p class="font-semibold text-gray-800">{{ task.created_at|date:"M d, Y H:i" }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm">Last Updated</p>
+                    <p class="font-semibold text-gray-800">{{ task.updated_at|date:"M d, Y H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #id_name, #id_unit_name, #id_task_type, #id_status, #id_due_date, #id_description {
+        @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500;
+    }
+    #id_description {
+        @apply resize-none;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dueDateInput = document.querySelector('#id_due_date');
+        if (dueDateInput) {
+            // For editing, we don't set a minimum - allow past dates for completed tasks
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ task.name }} - Study Planner{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Breadcrumb -->
+    <div class="mb-8">
+        <div class="flex items-center text-sm text-gray-600 gap-2">
+            <a href="{% url 'timetable:dashboard' %}" class="text-blue-600 hover:underline">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <a href="{% url 'tasks:dashboard' %}" class="text-blue-600 hover:underline">Tasks</a>
+            <i class="fas fa-chevron-right"></i>
+            <span class="text-gray-500">{{ task.name }}</span>
+        </div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+        <div class="p-8">
+            <!-- Header Section -->
+            <div class="flex justify-between items-start mb-6">
+                <div class="flex-1">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ task.name }}</h1>
+                    <p class="text-lg text-gray-600 mb-4">{{ task.unit_name }}</p>
+                    <div class="flex gap-2 flex-wrap">
+                        {% if task.task_type == 'assignment' %}
+                            <span class="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold">
+                                <i class="fas fa-file-alt"></i> Assignment
+                            </span>
+                        {% else %}
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold" style="background-color: var(--primary-light); color: var(--primary);">
+                                <i class="fas fa-tasks"></i> CAT
+                            </span>
+                        {% endif %}
+                        {% if task.status == 'pending' %}
+                            <span class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">
+                                <i class="fas fa-clock"></i> Pending
+                            </span>
+                        {% elif task.status == 'done' %}
+                            <span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
+                                <i class="fas fa-check-circle"></i> Done
+                            </span>
+                        {% else %}
+                            <span class="inline-block bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold">
+                                <i class="fas fa-exclamation-circle"></i> Not Submitted
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="flex gap-2 ml-4">
+                    <a href="{% url 'tasks:edit_task' task.id %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm font-semibold">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a href="{% url 'tasks:delete_task' task.id %}" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition text-sm font-semibold">
+                        <i class="fas fa-trash"></i> Delete
+                    </a>
+                </div>
+            </div>
+
+            <!-- Reminder Message Box -->
+            <div class="bg-blue-50 border-l-4 border-blue-600 p-4 mb-6">
+                <div class="flex gap-3">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-bell text-blue-600 text-lg mt-1"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-blue-900">Next Reminder</h3>
+                        <p class="text-blue-700 mt-1">{{ reminder_message }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Details Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-gray-600 text-sm mb-2">Due Date & Time</p>
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        <i class="fas fa-calendar-alt text-blue-600"></i> {{ task.due_date|date:"M d, Y" }}
+                    </h3>
+                    <p class="text-gray-600 text-sm mt-1">{{ task.due_date|time:"H:i" }}</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-gray-600 text-sm mb-2">Time Remaining</p>
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        {% if is_overdue %}
+                            <span class="inline-block bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                <i class="fas fa-exclamation"></i> Overdue
+                            </span>
+                        {% elif days_left == 0 %}
+                            <span class="inline-block bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                <i class="fas fa-fire"></i> Due Today
+                            </span>
+                        {% elif days_left == 1 %}
+                            <span class="inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                <i class="fas fa-hourglass-end"></i> Due Tomorrow
+                            </span>
+                        {% else %}
+                            <span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                <i class="fas fa-calendar-check"></i> {{ days_left }} days left
+                            </span>
+                        {% endif %}
+                    </h3>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-gray-600 text-sm mb-2">Progress</p>
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1 bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: {% if task.status == 'done' %}100{% elif task.status == 'pending' %}50{% else %}0{% endif %}%;"></div>
+                        </div>
+                        <span class="text-gray-700 font-semibold text-sm">
+                            {% if task.status == 'done' %}100%{% elif task.status == 'pending' %}50%{% else %}0%{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            {% if task.description %}
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                    <i class="fas fa-file-alt text-gray-600"></i> Description
+                </h3>
+                <p class="text-gray-700 leading-relaxed">{{ task.description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Metadata -->
+            <div class="pt-6 border-t border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="text-sm text-gray-600">
+                        <i class="fas fa-plus-circle text-blue-600"></i>
+                        <span class="ml-2">Created: <strong>{{ task.created_at|date:"M d, Y H:i" }}</strong></span>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <i class="fas fa-sync-alt text-blue-600"></i>
+                        <span class="ml-2">Updated: <strong>{{ task.updated_at|date:"M d, Y H:i" }}</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Status Update Card -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+        <div class="bg-gray-100 p-6 border-b border-gray-200">
+            <h2 class="text-lg font-bold text-gray-900">
+                <i class="fas fa-check-square text-blue-600"></i> Quick Status Update
+            </h2>
+        </div>
+        <div class="p-6">
+            <form method="post" action="{% url 'tasks:update_status' task.id %}" class="flex gap-4 flex-wrap">
+                {% csrf_token %}
+                <select name="status" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="pending" {% if task.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="done" {% if task.status == 'done' %}selected{% endif %}>Done</option>
+                    <option value="not_submitted" {% if task.status == 'not_submitted' %}selected{% endif %}>Not Submitted</option>
+                </select>
+                <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-semibold">
+                    <i class="fas fa-save"></i> Update Status
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reminder History -->
+    {% if reminder_logs %}
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="bg-gray-100 p-6 border-b border-gray-200">
+            <h2 class="text-lg font-bold text-gray-900">
+                <i class="fas fa-history text-blue-600"></i> Recent Reminders (Last 10)
+            </h2>
+        </div>
+        <div class="divide-y divide-gray-200">
+            {% for log in reminder_logs %}
+            <div class="p-6 hover:bg-gray-50 transition">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <strong class="text-gray-900">{{ log.sent_at|date:"M d, Y H:i" }}</strong>
+                            <span class="inline-block bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs font-semibold">
+                                <i class="fas fa-envelope"></i> {{ log.notification_method }}
+                            </span>
+                        </div>
+                        <p class="text-gray-700">{{ log.message }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="p-12 text-center">
+            <i class="fas fa-inbox text-gray-300 text-5xl mb-4"></i>
+            <p class="text-gray-600 mt-4">No reminders sent yet. They will start once you save this task.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Back Button -->
+    <div class="mt-8 text-center">
+        <a href="{% url 'tasks:dashboard' %}" class="inline-block bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition font-semibold">
+            <i class="fas fa-arrow-left"></i> Back to Tasks
+        </a>
+    </div>
+</div>
+{% endblock %}

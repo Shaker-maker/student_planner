@@ -1,0 +1,28 @@
+CLASS REMINDER
+{{ time_remaining|upper }} until class
+
+Hi {{ user.first_name }},
+
+{% if reminder_type == '1_hour' %}
+Your class starts in just 1 hour! Here are the details:
+{% else %}
+You have a class tomorrow. Here are the details:
+{% endif %}
+
+📖 UNIT: {{ entry.unit_name }}
+{% if entry.unit_code %}CODE: {{ entry.unit_code }}
+{% endif %}
+⏰ TIME: {{ entry.start_time|time:"H:i" }} - {{ entry.end_time|time:"H:i" }}
+📍 VENUE: {{ entry.venue }}
+{% if entry.lecturer %}👨🏫 LECTURER: {{ entry.lecturer }}
+{% endif %}
+
+{% if reminder_type == '1_hour' %}
+⚠️  BE ON TIME! Make sure you're on your way or already at the venue.
+{% else %}
+💡 PRO TIP: Prepare your materials and check any lecture notes for tomorrow's class.
+{% endif %}
+
+---
+Student Study Planner - Keep organized, stay on top of your studies!
+You're receiving this because email notifications are enabled. Change this in your profile settings.

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+        }
+        .content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+        }
+        .class-info {
+            background-color: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-row {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+        }
+        .info-label {
+            font-weight: bold;
+            min-width: 100px;
+            color: #667eea;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #667eea;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Class Reminder</h1>
+            <p>{{ time_remaining }} until class</p>
+        </div>
+        
+        <div class="content">
+            <p>Hi {{ user.first_name }},</p>
+            
+            {% if reminder_type == '1_hour' %}
+                <p>Your class starts in just <strong>1 hour</strong>! Here are the details:</p>
+            {% else %}
+                <p>You have a class <strong>tomorrow</strong>. Here are the details:</p>
+            {% endif %}
+            
+            <div class="class-info">
+                <div class="info-row">
+                    <span class="info-label">📖 Unit:</span>
+                    <span><strong>{{ entry.unit_name }}</strong></span>
+                </div>
+                {% if entry.unit_code %}
+                <div class="info-row">
+                    <span class="info-label">Code:</span>
+                    <span>{{ entry.unit_code }}</span>
+                </div>
+                {% endif %}
+                <div class="info-row">
+                    <span class="info-label">⏰ Time:</span>
+                    <span><strong>{{ entry.start_time|time:"H:i" }} - {{ entry.end_time|time:"H:i" }}</strong></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📍 Venue:</span>
+                    <span><strong>{{ entry.venue }}</strong></span>
+                </div>
+                {% if entry.lecturer %}
+                <div class="info-row">
+                    <span class="info-label">👨🏫 Lecturer:</span>
+                    <span>{{ entry.lecturer }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if reminder_type == '1_hour' %}
+                <p>⚠️ <strong>Be on time!</strong> Make sure you're on your way or already at the venue.</p>
+            {% else %}
+                <p>💡 <strong>Pro Tip:</strong> Prepare your materials and check any lecture notes for tomorrow's class.</p>
+            {% endif %}
+            
+            <div class="footer">
+                <p>Student Study Planner - Keep organized, stay on top of your studies!</p>
+                <p><small>You're receiving this because email notifications are enabled. You can change this in your profile settings.</small></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

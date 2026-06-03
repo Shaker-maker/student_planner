@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Delete Task - Study Planner{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Breadcrumb -->
+    <div class="mb-8">
+        <div class="flex items-center text-sm text-gray-600 gap-2">
+            <a href="{% url 'timetable:dashboard' %}" class="text-blue-600 hover:underline">Dashboard</a>
+            <i class="fas fa-chevron-right"></i>
+            <a href="{% url 'tasks:dashboard' %}" class="text-blue-600 hover:underline">Tasks</a>
+            <i class="fas fa-chevron-right"></i>
+            <span class="text-gray-500">Delete</span>
+        </div>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <!-- Danger Header -->
+        <div class="bg-gradient-to-r from-red-600 to-red-700 p-6 text-white">
+            <h1 class="text-2xl font-bold mb-2">
+                <i class="fas fa-trash"></i> Delete Task
+            </h1>
+            <p class="text-red-100">This action cannot be undone</p>
+        </div>
+
+        <div class="p-8">
+            <!-- Warning Alert -->
+            <div class="bg-red-50 border-l-4 border-red-600 p-4 mb-6">
+                <div class="flex gap-3">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-red-900">Warning: Irreversible Action</h3>
+                        <p class="text-red-700 mt-1 text-sm">
+                            Deleting this task will permanently remove it and all associated reminder logs. 
+                            Future reminders will no longer be sent.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Information -->
+            <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                <h3 class="font-semibold text-gray-800 mb-4">Task Details</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-gray-600 text-sm">Task Name</p>
+                        <p class="font-semibold text-gray-800">{{ task.name }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-sm">Unit Name</p>
+                        <p class="font-semibold text-gray-800">{{ task.unit_name }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-sm">Type</p>
+                        <p class="font-semibold text-gray-800">
+                            {% if task.task_type == 'assignment' %}
+                                <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">Assignment</span>
+                            {% else %}
+                                <span class="inline-block px-2 py-1 rounded text-xs font-semibold" style="background-color: var(--primary-light); color: var(--primary);">CAT</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-sm">Status</p>
+                        <p class="font-semibold text-gray-800">
+                            {% if task.status == 'done' %}
+                                <span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">Done</span>
+                            {% elif task.status == 'pending' %}
+                                <span class="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-semibold">Pending</span>
+                            {% else %}
+                                <span class="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-semibold">Not Submitted</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-sm">Due Date</p>
+                        <p class="font-semibold text-gray-800">{{ task.due_date|date:"M d, Y" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-sm">Created</p>
+                        <p class="font-semibold text-gray-800">{{ task.created_at|date:"M d, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirmation Form -->
+            <form method="post" id="deleteForm">
+                {% csrf_token %}
+                
+                <div class="mb-6">
+                    <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition">
+                        <input type="checkbox" id="confirmDelete" name="confirm" required class="w-4 h-4 text-red-600 rounded">
+                        <span class="text-gray-700">I understand this action is permanent and cannot be undone</span>
+                    </label>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4">
+                    <button type="submit" class="flex-1 bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed" 
+                            id="deleteBtn" disabled>
+                        <i class="fas fa-trash"></i> Delete Task
+                    </button>
+                    <a href="{% url 'tasks:detail' task.id %}" class="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition font-semibold text-center">
+                        <i class="fas fa-arrow-left"></i> Go Back
+                    </a>
+                </div>
+            </form>
+
+            <!-- Info Box -->
+            <div class="bg-blue-50 border-l-4 border-blue-600 p-4 mt-6">
+                <h4 class="font-semibold text-blue-900 mb-2">
+                    <i class="fas fa-lightbulb text-blue-600"></i> Do you want to keep this task?
+                </h4>
+                <ul class="text-blue-700 text-sm space-y-1">
+                    <li><strong>Mark as Done:</strong> <a href="{% url 'tasks:detail' task.id %}" class="text-blue-600 hover:underline">Go to task detail</a> and update the status instead</li>
+                    <li><strong>Change Details:</strong> <a href="{% url 'tasks:edit_task' task.id %}" class="text-blue-600 hover:underline">Edit the task</a> to modify it</li>
+                    <li><strong>Pause Reminders:</strong> Disable email notifications in your <a href="{% url 'accounts:profile' %}" class="text-blue-600 hover:underline">profile settings</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmCheckbox = document.getElementById('confirmDelete');
+        const deleteBtn = document.getElementById('deleteBtn');
+        
+        confirmCheckbox.addEventListener('change', function() {
+            deleteBtn.disabled = !this.checked;
+        });
+    });
+</script>
+{% endblock %}

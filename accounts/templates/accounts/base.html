@@ -60,10 +60,16 @@
                 
                 <div class="flex items-center space-x-4">
                     {% if user.is_authenticated %}
-                        <!-- Dashboard Link -->
+                        <!-- Timetable Link -->
                         <a href="{% url 'timetable:dashboard' %}" 
                            class="text-gray-700 hover:text-blue-600 transition">
-                            <i class="fas fa-calendar-alt"></i> Dashboard
+                            <i class="fas fa-calendar-alt"></i> Timetable
+                        </a>
+                        
+                        <!-- Tasks Link -->
+                        <a href="{% url 'tasks:dashboard' %}" 
+                           class="text-gray-700 hover:text-blue-600 transition">
+                            <i class="fas fa-tasks"></i> Tasks
                         </a>
                         
                         <!-- Profile Dropdown -->
@@ -74,7 +80,8 @@
                                          alt="{{ user.get_full_name }}"
                                          class="w-8 h-8 rounded-full object-cover border-2 border-blue-500">
                                 {% else %}
-                                    <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold border-2 border-blue-500">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold border-2" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-color: var(--primary);">
+
                                         {{ user.get_initials }}
                                     </div>
                                 {% endif %}

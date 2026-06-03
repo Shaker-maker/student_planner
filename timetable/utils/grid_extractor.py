@@ -27,6 +27,15 @@ class GridTimetableExtractor:
         'thursday': 'Thursday', 'friday': 'Friday', 'saturday': 'Saturday', 'sunday': 'Sunday'
     }
     
+    def __init__(self, lookup_table: Optional[Dict] = None):
+        """
+        Initialize extractor with optional lookup table for unit enrichment.
+        
+        Args:
+            lookup_table: Dictionary mapping unit_code → {'unit_name': ..., 'lecturer': ...}
+        """
+        self.lookup_table = lookup_table or {}
+    
     def extract_from_grid_table(self, table_data: List[List[str]], table_day: Optional[str] = None) -> List[Dict]:
         """
         Extract entries from a day×time grid timetable.
@@ -226,6 +235,14 @@ class GridTimetableExtractor:
             unit_name = match.group(2).strip() or unit_code  # Use code as name if name is empty
             lecturer = match.group(3).strip() or ""
             venue = match.group(4).strip() or ""
+            
+            # Enrich with lookup table if available
+            if unit_code in self.lookup_table:
+                lookup_data = self.lookup_table[unit_code]
+                if lookup_data.get('unit_name'):
+                    unit_name = lookup_data['unit_name']
+                if lookup_data.get('lecturer') and not lecturer:  # Don't override if we have lecturer from PDF
+                    lecturer = lookup_data['lecturer']
         else:
             # If pattern doesn't match, try simple extraction
             # Just assume the whole cell is unit code + venue
@@ -244,7 +261,8 @@ class GridTimetableExtractor:
             
             lecturer = ""
         
-        return {
+        # Enrich with lookup table if available
+        entry = {
             'unit_code': unit_code,
             'unit_name': unit_name,
             'lecturer': lecturer,
@@ -255,3 +273,15 @@ class GridTimetableExtractor:
             'raw_text': cell,
             'confidence': 0.0
         }
+        
+        # Check lookup table for enriched unit name and lecturer
+        if unit_code in self.lookup_table:
+            lookup_data = self.lookup_table[unit_code]
+            if lookup_data.get('unit_name'):
+                entry['unit_name'] = lookup_data['unit_name']
+                entry['unit_name_source'] = 'lookup_table'
+            if lookup_data.get('lecturer') and not lecturer:  # Don't override if we have lecturer from PDF
+                entry['lecturer'] = lookup_data['lecturer']
+                entry['lecturer_source'] = 'lookup_table'
+        
+        return entry

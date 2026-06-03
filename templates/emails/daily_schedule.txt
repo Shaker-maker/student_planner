@@ -1,0 +1,32 @@
+Your Schedule for {{ schedule_date|date:"l, F j" }}
+================================================
+
+Hey {{ user.first_name }} 👋🏽,
+
+Here's your timetable for {{ schedule_date|date:"F j" }} to help you prepare for the day ahead!
+
+{% if classes %}
+YOUR CLASSES
+============
+
+{% for class in classes %}
+⏰ {{ class.start_time|time:"H:i" }} - {{ class.end_time|time:"H:i" }}
+   {{ class.get_display_code }} - {{ class.get_display_name }}
+   📍 Venue: {{ class.venue }}
+{% if class.lecturer %}   👨‍🏫 Lecturer: {{ class.lecturer }}
+{% endif %}
+
+{% endfor %}
+
+You have {{ classes|length }} class{{ classes|length|pluralize }} scheduled for tomorrow.
+Make sure to review the materials before each class!
+
+{% else %}
+You don't have any classes scheduled for {{ schedule_date|date:"l, F j" }}.
+Enjoy your free day! ✨
+
+{% endif %}
+
+---
+Student Study Planner
+This is an automated message. Manage your notification preferences in your profile settings.

@@ -19,12 +19,14 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import redirect
+from accounts.views import landing_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('timetable/', include('timetable.urls')),
-    path('', lambda request: redirect('timetable:dashboard') if request.user.is_authenticated else redirect('accounts:login')),
+    path('tasks/', include('tasks.urls')),
+    path('', landing_view, name='landing'),
 ]
 
 # Serve media files in development

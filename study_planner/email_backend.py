@@ -12,8 +12,9 @@ class DualEmailBackend:
     Emails are actually sent to Gmail AND printed in console for debugging.
     """
     
-    def __init__(self, fail_silently=False):
-        self.smtp_backend = SMTPEmailBackend(fail_silently=fail_silently)
+    def __init__(self, fail_silently=False, **kwargs):
+        # Pass through all kwargs to SMTPEmailBackend (e.g., username, password, etc.)
+        self.smtp_backend = SMTPEmailBackend(fail_silently=fail_silently, **kwargs)
         self.console_backend = ConsoleEmailBackend(fail_silently=fail_silently)
     
     def open(self):

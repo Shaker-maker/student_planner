@@ -42,14 +42,21 @@ class TimetableNLPProcessor:
         'sunday': r'\b(?:Sun|Sunday)\b',
     }
     
-    def __init__(self):
-        """Initialize NLP processor with spaCy model."""
+    def __init__(self, lookup_table: Optional[Dict] = None):
+        """
+        Initialize NLP processor with spaCy model.
+        
+        Args:
+            lookup_table: Optional dictionary for unit code → name enrichment
+        """
         try:
             self.nlp = spacy.load("en_core_web_sm")
             logger.info("✅ spaCy model loaded successfully")
         except OSError:
             logger.error("❌ spaCy model not found. Run: python -m spacy download en_core_web_sm")
             raise
+        
+        self.lookup_table = lookup_table or {}
     
     def process_table_row(self, row: List[str], row_index: int = 0) -> Dict:
         """
@@ -70,12 +77,20 @@ class TimetableNLPProcessor:
         # Try GROUP first (BCS_Y1_S2 format) - this takes precedence
         group = self.extract_group(row_text)
         
-        unit_code = self.extract_unit_code(row_text)
-        unit_name = self.extract_unit_name(row_text, row)
+        # Try positional/column-based extraction first for structured tables
+        unit_code, unit_name = self._extract_unit_code_and_name_from_columns(row)
         
-        # Fallback: if no unit name but we have unit code, use unit code as name
+        # Fallback to text parsing if column-based didn't work
+        if not unit_code:
+            unit_code = self.extract_unit_code(row_text)
+        
         if not unit_name and unit_code:
-            unit_name = unit_code
+            # Try to extract unit name from text between unit code and (lecturer)
+            unit_name = self._extract_unit_name_from_text(row_text, unit_code)
+        
+        # If still no unit name, try NLP
+        if not unit_name:
+            unit_name = self.extract_unit_name(row_text, row)
         
         # Try to extract times from column-based structure first
         time_range = self.extract_time_range_from_columns(row) or self.extract_time_range(row_text)
@@ -94,6 +109,155 @@ class TimetableNLPProcessor:
         
         logger.debug(f"Row {row_index}: Extracted {entities}")
         return entities
+        
+        entities = {
+            'group': group,  # GROUP column value (e.g., BCS_Y1_S2)
+            'unit_code': unit_code,
+            'unit_name': unit_name,
+            'lecturer': self.extract_lecturer(row_text),
+            'venue': self.extract_venue(row_text),
+            'day': self.extract_day(row_text),
+            'time_range': time_range,
+            'raw_text': row_text,
+            'confidence': 0.0  # Will be calculated later
+        }
+        
+        logger.debug(f"Row {row_index}: Extracted {entities}")
+        return entities
+    
+    def _extract_unit_name_from_text(self, text: str, unit_code: str) -> Optional[str]:
+        """
+        Extract unit name from text between unit code and lecturer name (in parentheses).
+        
+        Handles format: "CCS 2424 [UnitName] (Lecturer) Venue"
+        
+        Example:
+        - "CCS 2400 PROJECT ( ) LAB A-06" → "PROJECT"
+        - "CCS 2424 (MOKODIR) A-03" → None (no unit name, just lecturer)
+        
+        Args:
+            text: Full text containing unit code, unit name, lecturer
+            unit_code: The extracted unit code (e.g., "CCS 2424")
+        
+        Returns:
+            Unit name or None
+        """
+        if not text or not unit_code:
+            return None
+        
+        # Find where the unit code appears in the text
+        # Use case-insensitive search
+        import re as regex_module
+        unit_code_match = regex_module.search(regex_module.escape(unit_code), text, regex_module.IGNORECASE)
+        
+        if not unit_code_match:
+            return None
+        
+        # Get text AFTER the unit code
+        after_code = text[unit_code_match.end():]
+        
+        # Look for text between unit code and opening parenthesis (lecturer)
+        # Format: "UnitName (Lecturer)"
+        paren_match = regex_module.search(r'\(', after_code)
+        
+        if not paren_match:
+            # No lecturer in parentheses, maybe the rest is the unit name
+            # But only if it's not just venue
+            remainder = after_code.strip()
+            if remainder and not regex_module.search(r'^[A-Z]-\d|^LR\s*\d|^Lab', remainder):
+                return remainder
+            return None
+        
+        # Extract text between unit code and opening parenthesis
+        before_paren = after_code[:paren_match.start()].strip()
+        
+        # Filter out common venue patterns
+        if before_paren:
+            # Skip if it looks like a venue (LR5, Lab 2, A-03, etc.)
+            if regex_module.search(r'^(?:LR|Lab|Room|Hall|[A-Z]-\d|[A-Z]\d{2,3})\b', before_paren, regex_module.IGNORECASE):
+                return None
+            
+            # This looks like a unit name
+            logger.debug(f"Extracted unit name from text: '{before_paren}' from '{text}'")
+            return before_paren
+        
+        return None
+    
+    def _extract_unit_code_and_name_from_columns(self, row: List[str]) -> tuple:
+        """
+        Extract unit code and unit name from column-based structure.
+        
+        Intelligently identifies which cell is the unit name by:
+        1. Finding the unit code cell
+        2. Looking at adjacent cells to find actual course names (multi-word entries)
+        3. Filtering out lecturer names, times, venues
+        
+        Args:
+            row: List of cell values from table row
+        
+        Returns:
+            Tuple of (unit_code, unit_name) or (None, None) if not found
+        """
+        if not row or len(row) < 2:
+            return None, None
+        
+        unit_code = None
+        unit_name = None
+        
+        # Step 1: Find the unit code in the row
+        code_cell_index = None
+        for i, cell in enumerate(row):
+            if not cell:
+                continue
+            cell_str = str(cell).strip()
+            # Check if this cell matches unit code pattern (e.g., "CCS 2424", "BCT_Y1_S2")
+            match = re.search(self.UNIT_CODE_PATTERN, cell_str)
+            if match:
+                unit_code = match.group(0)
+                code_cell_index = i
+                logger.debug(f"Found unit code at index {i}: {unit_code}")
+                break
+        
+        # Step 2: If we found a unit code, search for the unit name in nearby cells
+        if code_cell_index is not None:
+            # Search in the next 2-3 cells after the unit code
+            for offset in range(1, 4):
+                check_index = code_cell_index + offset
+                if check_index >= len(row):
+                    break
+                
+                cell_str = str(row[check_index]).strip()
+                if not cell_str or len(cell_str) < 3:
+                    # Skip empty or very short cells
+                    continue
+                
+                # Check if this looks like a unit name (not a code, time, venue, or lecturer)
+                # Unit names are typically multi-word descriptive phrases
+                is_unit_code = bool(re.search(self.UNIT_CODE_PATTERN, cell_str))
+                is_lecturer = bool(re.search(r'\b(?:Dr|Prof|Mr|Mrs|Ms|Miss)\.?\b', cell_str, re.IGNORECASE))
+                is_time = bool(re.search(r'\d{1,2}:\d{2}', cell_str))
+                is_venue = bool(re.search(r'\b(?:LR|Lab|Room|Hall|A|B|C|D)\s*\d+\b', cell_str))
+                
+                # Accept this cell as unit name if it doesn't look like other entities
+                if not any([is_unit_code, is_lecturer, is_time, is_venue]):
+                    unit_name = cell_str
+                    logger.debug(f"Found unit name at index {check_index}: {unit_name}")
+                    break
+        
+        # Step 3: Also check BEFORE the unit code (in case structure is different)
+        if not unit_name and code_cell_index is not None and code_cell_index > 0:
+            # Check the cell before the unit code
+            prev_cell = str(row[code_cell_index - 1]).strip()
+            if prev_cell and len(prev_cell) > 3:
+                is_unit_code = bool(re.search(self.UNIT_CODE_PATTERN, prev_cell))
+                is_lecturer = bool(re.search(r'\b(?:Dr|Prof|Mr|Mrs|Ms|Miss)\.?\b', prev_cell, re.IGNORECASE))
+                is_time = bool(re.search(r'\d{1,2}:\d{2}', prev_cell))
+                
+                if not any([is_unit_code, is_lecturer, is_time]):
+                    unit_name = prev_cell
+                    logger.debug(f"Found unit name before code at index {code_cell_index-1}: {unit_name}")
+        
+        return unit_code, unit_name
     
     def extract_time_range_from_columns(self, row: List[str]) -> Optional[Dict]:
         """
@@ -184,7 +348,9 @@ class TimetableNLPProcessor:
     
     def extract_unit_name(self, text: str, row: List[str]) -> Optional[str]:
         """
-        Extract unit name using heuristics and NLP.
+        Extract unit name using intelligent heuristics and NLP.
+        
+        Prioritizes substantial text (multi-word phrases) that look like course names.
         
         Args:
             text: Full row text
@@ -193,30 +359,50 @@ class TimetableNLPProcessor:
         Returns:
             Unit name or None
         """
-        # Try to find the longest text chunk (likely unit name)
         candidates = []
         
-        # Method 1: Look for cells with multiple words
-        for cell in row:
+        # Method 1: Find cells with substantial text that aren't other entities
+        for idx, cell in enumerate(row):
             cell_str = str(cell).strip()
-            if cell_str and len(cell_str.split()) >= 2:
-                # Exclude if it looks like lecturer (has title) or venue
-                if not re.search(r'\b(?:Dr|Prof|Mr|Mrs|Ms|Miss)\.?\b', cell_str, re.IGNORECASE):
-                    if not re.search(r'\b(?:LR|Lab|Room|Hall)\b', cell_str, re.IGNORECASE):
-                        candidates.append(cell_str)
+            
+            # Skip short cells, empty cells
+            if not cell_str or len(cell_str) < 4:
+                continue
+            
+            # Skip if it's clearly not a unit name
+            if (re.search(self.UNIT_CODE_PATTERN, cell_str) or
+                re.search(r'\b(?:Dr|Prof|Mr|Mrs|Ms|Miss)\.?\b', cell_str, re.IGNORECASE) or
+                re.search(r'\d{1,2}:\d{2}', cell_str) or
+                re.search(r'\b(?:LR|Lab|Room|Hall|A|B|C|D)\s*\d+\b', cell_str)):
+                continue
+            
+            # This looks like it could be a unit name
+            candidates.append((idx, cell_str, len(cell_str.split())))  # Index, text, word count
         
-        # Method 2: Use spaCy to find noun phrases
+        # Filter to prefer longer, multi-word candidates (typical unit names)
+        multi_word_candidates = [c for c in candidates if c[2] >= 2]
+        
+        if multi_word_candidates:
+            # Pick the longest multi-word candidate
+            unit_name = max(multi_word_candidates, key=lambda x: x[1])[1]
+            logger.debug(f"Found unit name via cell extraction: {unit_name}")
+            return unit_name
+        
+        # Fallback to single candidates if no multi-word options
+        if candidates:
+            unit_name = max(candidates, key=lambda x: len(x[1]))[1]
+            logger.debug(f"Found unit name via single-word cell: {unit_name}")
+            return unit_name
+        
+        # Method 2: Use spaCy NER as last resort
         doc = self.nlp(text)
         for chunk in doc.noun_chunks:
-            if len(chunk.text.split()) >= 2:
-                candidates.append(chunk.text)
-        
-        # Return longest candidate
-        if candidates:
-            unit_name = max(candidates, key=len)
-            # Clean up
-            unit_name = re.sub(r'\s+', ' ', unit_name).strip()
-            return unit_name
+            chunk_text = chunk.text.strip()
+            # Skip unit codes
+            if chunk_text and not re.search(self.UNIT_CODE_PATTERN, chunk_text):
+                if len(chunk_text) > 4:  # Minimum length
+                    logger.debug(f"Found unit name via NLP: {chunk_text}")
+                    return chunk_text
         
         return None
     
@@ -371,7 +557,7 @@ class TimetableNLPProcessor:
         all_entries = []
         total_rows = 0
         total_cells_processed = 0
-        grid_extractor = GridTimetableExtractor()
+        grid_extractor = GridTimetableExtractor(lookup_table=self.lookup_table)
         
         for table in tables:
             table_data = table['data']

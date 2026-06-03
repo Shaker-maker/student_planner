@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import PDFDocument, TimetableEntry, ExtractionLog, MLTrainingData
+from .models import PDFDocument, TimetableEntry, ExtractionLog, MLTrainingData, UnitCatalog
 
 # Register your models here.
 
@@ -48,6 +48,30 @@ class TimetableEntryAdmin(admin.ModelAdmin):
         ('AI Metadata', {
             'fields': ('confidence_score', 'extraction_method', 'is_manually_added', 
                       'is_verified', 'extracted_entities', 'user_corrections')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+    
+
+@admin.register(UnitCatalog)
+class UnitCatalogAdmin(admin.ModelAdmin):
+    list_display = ['unit_code', 'unit_name', 'department', 'credits', 'is_active']
+    list_filter = ['is_active', 'department', 'created_at']
+    search_fields = ['unit_code', 'unit_name', 'department']
+    list_editable = ['is_active']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    fieldsets = (
+        ('Unit Information', {
+            'fields': ('unit_code', 'unit_name', 'department', 'credits')
+        }),
+        ('Status', {
+            'fields': ('is_active',)
+        }),
+        ('Description', {
+            'fields': ('description',)
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at')

@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
-from django.utils import timezone
+from django.utils import timezone as django_timezone
 import uuid, os
 from  PIL import Image
 
@@ -88,11 +88,38 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
 
     #Notification preferences 
+    timezone = models.CharField(
+        max_length=50,
+        default='Africa/Nairobi',
+        choices=[
+            ('Africa/Nairobi', 'Africa/Nairobi'),
+            ('Africa/Johannesburg', 'Africa/Johannesburg'),
+            ('Africa/Cairo', 'Africa/Cairo'),
+            ('UTC', 'UTC'),
+            ('Europe/London', 'Europe/London'),
+            ('America/New_York', 'America/New_York'),
+            ('Asia/Kolkata', 'Asia/Kolkata'),
+            ('Australia/Sydney', 'Australia/Sydney'),
+        ],
+        help_text="Your timezone for scheduling notifications"
+    )
     reminder_time = models.TimeField(
-        default=timezone.now().replace(hour=8, minute=0, second=0, microsecond=0).time(),
+        default=django_timezone.now().replace(hour=8, minute=0, second=0, microsecond=0).time(),
         help_text="Time of the day to receive daily assignment reminders(e.g, 08:00 AM)"
     )
     email_notifications = models.BooleanField(default=True)
+    class_reminders = models.BooleanField(
+        default=True,
+        help_text="Receive class reminders (1 day and 1 hour before)"
+    )
+    task_reminders = models.BooleanField(
+        default=True,
+        help_text="Receive task/assignment reminders"
+    )
+    schedule_reminders = models.BooleanField(
+        default=True,
+        help_text="Receive daily schedule email for tomorrow's classes"
+    )
 
     #Account status
     is_active = models.BooleanField(default=False) # False until email verified
@@ -100,7 +127,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_email_verified = models.BooleanField(default=False)
 
     #Timestamps
-    date_joined = models.DateTimeField(default=timezone.now)
+    date_joined = models.DateTimeField(default=django_timezone.now)
     last_login = models.DateTimeField(null=True, blank=True)
 
     #Tell Django which fields to use for login
@@ -208,5 +235,6 @@ class EmailVerification(models.Model):
     
     def is_valid(self):
         """Check if token is still valid(within 24 hours)"""
-        expiry_time = self.created_at + timezone.timedelta(hours=24)
-        return timezone.now() < expiry_time
+        from datetime import timedelta
+        expiry_time = self.created_at + timedelta(hours=24)
+        return django_timezone.now() < expiry_time

@@ -14,6 +14,7 @@ urlpatterns = [
     path('profile', views.profile_view, name='profile'),
     path('profile/edit/', views.edit_profile_view, name='edit_profile'),
     path('profile/delete-picture/', views.delete_profile_picture_view, name='delete_profile_picture'),
+    path('delete-account/', views.delete_account_view, name='delete_account'),
 
     #Password Reset(Forgot Password)
     path('password-reset/', 

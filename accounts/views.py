@@ -14,7 +14,7 @@ def register_view(request):
     Handles user registration and sends verification email.
     """
     if request.user.is_authenticated:
-        return redirect('timetable:dashboard')
+        return redirect('timetable:home')
     
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
@@ -97,7 +97,7 @@ def login_view(request):
     Handles user login.
     """
     if request.user.is_authenticated:
-        return redirect('timetable:dashboard')
+        return redirect('timetable:home')
     
     if request.method == 'POST':
         form = LoginForm(data=request.POST)
@@ -112,8 +112,8 @@ def login_view(request):
                     login(request, user)
                     messages.success(request, f'Welcome back, {user.first_name}! 👋🏽')
                     
-                    # Redirect to 'next' parameter if exists, else dashboard
-                    next_url = request.GET.get('next', 'timetable:dashboard')
+                    # Redirect to 'next' parameter if exists, else home
+                    next_url = request.GET.get('next', 'timetable:home')
                     return redirect(next_url)
                 else:
                     messages.error(request, 'Please verify your email before logging in.')
@@ -181,3 +181,39 @@ def delete_profile_picture_view(request):
         return redirect('accounts:edit_profile')
 
     return redirect('accounts:profile')
+
+
+@login_required
+def delete_account_view(request):
+    """
+    Handles account deletion with confirmation.
+    
+    GET: Shows confirmation page with warning
+    POST: Deletes user account and all associated data
+    """
+    if request.method == 'POST':
+        user = request.user
+        user_email = user.email
+        
+        # Delete all associated data (cascade handled by Django models)
+        user.delete()
+        
+        # Log out the user (session is already invalid)
+        logout(request)
+        
+        messages.success(request, f'Your account ({user_email}) and all associated data have been permanently deleted.')
+        return redirect('accounts:login')
+    
+    # GET: Show confirmation page
+    return render(request, 'accounts/delete_account.html')
+
+
+def landing_view(request):
+    """
+    Landing page for unauthenticated users.
+    Shows features and calls-to-action for signup/login.
+    Redirects authenticated users to their dashboard.
+    """
+    if request.user.is_authenticated:
+        return redirect('timetable:home')
+    return render(request, 'landing.html')

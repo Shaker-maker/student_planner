@@ -1,0 +1,14 @@
+# Celery + Task Scheduling
+celery==5.3.1
+redis==5.0.1
+django-celery-beat==2.5.0
+django-celery-results==2.5.1
+
+# Note: These should be added to your existing requirements.txt
+# Your existing requirements likely already include:
+# Django==5.2.7
+# Pillow==10.2.0
+# django-crispy-forms
+# crispy-bootstrap5
+# requests
+# etc.

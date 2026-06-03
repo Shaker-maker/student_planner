@@ -3,120 +3,187 @@
 {% block title %}Register - Study Planner{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto">
-    <div class="bg-white rounded-lg shadow-lg p-8">
-        <h2 class="text-3xl font-bold tetxt-center text-gray-800 mb-6">
-            <i class="fas fa-user-plus text-blue-600"></i> Create Accoubt
-        </h2>
+<style>
+    .register-form select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.5rem center;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+    }
+    
+    .password-toggle {
+        position: relative;
+    }
+    
+    .password-toggle input {
+        padding-right: 2.5rem;
+    }
+    
+    .password-toggle-btn {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #6b7280;
+        font-size: 0.9rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .password-toggle-btn:hover {
+        color: #2563eb;
+    }
+</style>
 
-        <form method="post" novalidate>
-            {% csrf_token %}
+<div class="py-8">
+    <div class="max-w-md mx-auto px-4">
+        <div class="bg-white rounded-lg shadow-2xl p-8">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">
+                <i class="fas fa-user-plus text-blue-600"></i> Create Account
+            </h2>
 
-            <!-- First Name-->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">
-                    First Name
-                </label>
-                {{ form.first_name }}
-                {% if form.first_name.errors %}
-                <p class="text-red-500 text-xs mt-1">{{ form.first_name.errors.0 }}</p>
-                {% endif %}
+            <form method="post" novalidate class="register-form">
+                {% csrf_token %}
 
-            </div>
+                <!-- First Name -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        First Name <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.first_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
 
-            <!-- Last Name-->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">
-                    Last name
-                </label>
-                {{ form.last_name }}
-                {% if form.last_name.errors %}
-                <p class="text-red-500 text-xs mt-1">{{ form.last_name.errors.0 }}</p>
-                {% endif %}
+                <!-- Last Name -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Last Name <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.last_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
 
-            </div>
+                <!-- Email -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Email <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
 
-            <!-- Email-->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">
-                    Email
-                </label>
-                {{ form.email }}
-                {%if form.email.errors %}
-                <p class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</p>
-                {% endif %}
+                <!-- Year of Study -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Year of Study <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.year_of_study }}
+                    {% if form.year_of_study.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.year_of_study.errors.0 }}</p>
+                    {% endif %}
+                </div>
 
-            </div>
+                <!-- Course -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Course <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.course }}
+                    {% if form.course.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.course.errors.0 }}</p>
+                    {% endif %}
+                </div>
 
-            <!-- Year of Study-->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">
-                    Year of Study
-                </label>
-                {{ form.year_of_study }}
-                {%if form.year_of_study.errors %}
-                <p class="text-red-500 text-xs mt-1">{{ form.year_of_study.errors.0 }}</p>
-                {% endif %}
+                <!-- Semester -->
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Semester <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.semester }}
+                    {% if form.semester.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.semester.errors.0 }}</p>
+                    {% endif %}
+                </div>
 
-            </div>
+                <!-- Password -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Password <span class="text-red-500">*</span>
+                    </label>
+                    <div class="password-toggle">
+                        {{ form.password1 }}
+                        <button type="button" class="password-toggle-btn" onclick="togglePassword('id_password1')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    {% if form.password1.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.password1.errors.0 }}</p>
+                    {% endif %}
+                    <div class="bg-blue-50 border border-blue-200 rounded p-3 mt-2 text-sm text-gray-700">
+                        <p class="font-semibold text-gray-800 mb-2">Password requirements:</p>
+                        <ul class="space-y-1 text-gray-600">
+                            <li><i class="fas fa-check-circle text-green-600"></i> At least 8 characters</li>
+                            <li><i class="fas fa-check-circle text-green-600"></i> Can't be entirely numeric</li>
+                            <li><i class="fas fa-check-circle text-green-600"></i> Can't be too similar to your info</li>
+                        </ul>
+                    </div>
+                </div>
 
-            <!-- Course-->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">
-                    Course
-                </label>
-                {{ form.course }}
-                {%if form.course.errors %}
-                <p class="text-red-500 text-xs mt-1">{{ form.course.errors.0 }}</p>
-                {% endif %}
+                <!-- Confirm Password -->
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Confirm Password <span class="text-red-500">*</span>
+                    </label>
+                    <div class="password-toggle">
+                        {{ form.password2 }}
+                        <button type="button" class="password-toggle-btn" onclick="togglePassword('id_password2')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    {% if form.password2.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.password2.errors.0 }}</p>
+                    {% endif %}
+                </div>
 
-            </div>
+                <!-- Submit Button -->
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 shadow-md">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+            </form>
 
-            <!-- Password-->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">
-                    Password
-                </label>
-                {{ form.password1 }}
-                {%if form.password1.errors %}
-                <p class="text-red-500 text-xs mt-1">{{ form.password1.errors.0 }}</p>
-                {% endif %}
-                <p class="text-gray-500 text-xs mt-1">
-                    . At least 8 characters<br>
-                    . Can't be entirely numeric<br>
-                    . Can't be too similar to your other info
-
-                </p>
-
-            </div>
-
-            <!-- Confirm Password-->
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">
-                    Confirm Password
-                </label>
-                {{ form.password2 }}
-                {%if form.password2.errors %}
-                <p class="text-red-500 text-xs mt-1">{{ form.password2.errors.0 }}</p>
-                {% endif %}
-
-            </div>
-
-            <!-- Submit Button-->
-            <button type="submit"
-                class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
-                <i class="fas fa-user-plus"></i> Create Account
-            </button>
-        </form>
-        <p class="tetxt-center text-gray-600 mt-6">
-            Already have an account?
-            <a href="{% url 'accounts:login' %}" class="text-blue-600 hover:underline font-semibold">
-                Login here
-            </a>
-        </p>
-
+            <p class="text-center text-gray-600 mt-6">
+                Already have an account?
+                <a href="{% url 'accounts:login' %}" class="text-blue-600 hover:underline font-semibold">
+                    Login here
+                </a>
+            </p>
+        </div>
     </div>
-
 </div>
+
+<script>
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const btn = event.target.closest('.password-toggle-btn');
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+    } else {
+        field.type = 'password';
+        btn.innerHTML = '<i class="fas fa-eye"></i>';
+    }
+}
+</script>
 
 {% endblock %}

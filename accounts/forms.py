@@ -42,9 +42,10 @@ class RegistrationForm(UserCreationForm):
     )
 
     course = forms.CharField(
+        max_length=100,
         widget=forms.TextInput(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-            'placeholder': 'Computer Science'
+            'placeholder': 'e.g., Computer Science, Information Technology'
         })
     )
     semester = forms.ChoiceField(
@@ -128,7 +129,7 @@ class ProfileEditForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name','email','year_of_study','course','profile_picture','reminder_time','email_notifications']
+        fields = ['first_name', 'last_name','email','year_of_study','semester','course','profile_picture','reminder_time','email_notifications']
         widgets = {
             'first_name': forms.TextInput(attrs={
                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
@@ -144,6 +145,9 @@ class ProfileEditForm(forms.ModelForm):
                 }),
 
             'year_of_study': forms.Select(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                }),
+            'semester': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                 }),
             'course': forms.TextInput(attrs={

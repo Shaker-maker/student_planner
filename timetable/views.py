@@ -3,12 +3,72 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
+from django.utils import timezone
+from datetime import timedelta
 from .models import PDFDocument, TimetableEntry
 from .forms import PDFUploadForm, TimetableEntryForm
 from .services import TimetableExtractionService
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+@login_required
+def home_dashboard_view(request):
+    """
+    Central home dashboard - serves as the main entry point for authenticated users.
+    Shows overview of timetable, tasks, and quick actions.
+    """
+    user = request.user
+    
+    # Get all timetable entries for user
+    entries = TimetableEntry.objects.filter(user=user).order_by('day_of_week', 'start_time')
+    
+    # Get upcoming tasks (next 7 days)
+    try:
+        from tasks.models import Task
+        today = timezone.now().date()
+        upcoming_tasks = Task.objects.filter(
+            user=user,
+            status__in=['pending', 'not_submitted']
+        ).filter(
+            due_date__gte=today
+        ).order_by('due_date')[:5]
+        
+        # Task statistics
+        all_tasks = Task.objects.filter(user=user)
+        task_stats = {
+            'pending': all_tasks.filter(status='pending').count(),
+            'done': all_tasks.filter(status='done').count(),
+            'not_submitted': all_tasks.filter(status='not_submitted').count(),
+            'total': all_tasks.count(),
+        }
+    except ImportError:
+        upcoming_tasks = []
+        task_stats = {'pending': 0, 'done': 0, 'not_submitted': 0, 'total': 0}
+    
+    # Get this week's classes (next 7 days)
+    today = timezone.now().date()
+    week_start = today
+    week_end = today + timedelta(days=7)
+    week_entries = entries.filter(day_of_week__in=['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])[:7]
+    
+    # Statistics
+    stats = {
+        'total_classes': entries.count(),
+        'total_pdfs': PDFDocument.objects.filter(user=user).count(),
+        'verified_entries': entries.filter(is_verified=True).count(),
+    }
+    
+    context = {
+        'user': user,
+        'entries': week_entries,
+        'upcoming_tasks': upcoming_tasks,
+        'stats': stats,
+        'task_stats': task_stats,
+    }
+    
+    return render(request, 'home_dashboard.html', context)
 
 
 @login_required

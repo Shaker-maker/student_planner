@@ -12,9 +12,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -43,6 +47,9 @@ INSTALLED_APPS = [
     'tasks',
     'notifications',
 ]
+
+# Add APScheduler for background task scheduling
+INSTALLED_APPS += ['django_apscheduler']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -192,3 +199,46 @@ CACHE_MIDDLEWARE_SECONDS = 0
 CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Strict'
+
+# ========================================
+# APSCHEDULER CONFIGURATION
+# ========================================
+APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
+APSCHEDULER_RUN_NOW_TIMEOUT = 25  # 25 seconds
+
+# Store schedule in database for persistence
+SCHEDULES = {
+    'apscheduler': {
+        'ENGINE': 'django_apscheduler.schedulers:DjangoScheduler',
+    }
+}
+
+# Silence the "APScheduler already started" warning
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'apscheduler.schedulers.background': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+    },
+}
+
+# ========================================
+# CUSTOM SCHEDULE REMINDERS CONFIGURATION
+# ========================================
+# Time to send daily schedule emails (hour and minute in 24-hour format)
+# Default: 18:00 (6:00 PM UTC / 9:00 PM Nairobi)
+# To test: Set to a time 1-2 minutes from now
+SCHEDULE_EMAIL_HOUR = int(os.getenv('SCHEDULE_EMAIL_HOUR', '18'))
+SCHEDULE_EMAIL_MINUTE = int(os.getenv('SCHEDULE_EMAIL_MINUTE', '0'))
+
+# Example: Set to run every minute for testing
+# SCHEDULE_EMAIL_HOUR = 0
+# SCHEDULE_EMAIL_MINUTE = '*'

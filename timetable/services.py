@@ -10,8 +10,10 @@ from django.utils import timezone
 from django.db import transaction
 from .models import PDFDocument, TimetableEntry, ExtractionLog
 from .utils.pdf_extractor import PDFTableExtractor
+from .utils.enhanced_pdf_extractor import EnhancedPDFExtractor
 from .utils.nlp_processor import TimetableNLPProcessor
 from .utils.confidence_scorer import ConfidenceScorer
+from .utils.grid_extractor import GridTimetableExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -62,9 +64,34 @@ class TimetableExtractionService:
         self.pdf_path = pdf_document.file.path
         
         # Initialize AI components
+        # Try enhanced extractor first to get lookup table (pages 6-8)
+        self.lookup_table = {}
+        self.use_enhanced = False
+        
+        try:
+            # Only extract lookup table from enhanced extractor, not main tables
+            # because enhanced table format is incompatible with NLP processor
+            import pdfplumber
+            with pdfplumber.open(self.pdf_path) as pdf:
+                enhanced_extractor = EnhancedPDFExtractor(self.pdf_path)
+                enhanced_extractor._extract_lookup_tables(pdf)
+                self.lookup_table = enhanced_extractor.lookup_table
+            
+            if len(self.lookup_table) > 0:
+                logger.info(f"✅ Extracted lookup table with {len(self.lookup_table)} units from pages 6-8")
+        except Exception as e:
+            logger.debug(f"Lookup table extraction not available: {str(e)}")
+            self.lookup_table = {}
+        
+        # Use standard extractor for main tables (pages 1-5)
+        # because it returns correct format for NLP processor
         self.extractor = PDFTableExtractor(self.pdf_path)
-        self.nlp_processor = TimetableNLPProcessor()
+        
+        self.nlp_processor = TimetableNLPProcessor(lookup_table=self.lookup_table)
         self.confidence_scorer = ConfidenceScorer()
+        
+        # Initialize grid extractor with lookup table for enrichment
+        self.grid_extractor = GridTimetableExtractor(lookup_table=self.lookup_table)
         
         # Metrics
         self.start_time = None
@@ -88,9 +115,12 @@ class TimetableExtractionService:
             self.pdf_document.save()
             
             logger.info(f"🚀 Starting extraction for: {self.pdf_document.original_filename}")
+            logger.info(f"   Using lookup enrichment: {len(self.lookup_table)} units loaded")
             
             # Stage 1: Extract tables using Computer Vision
             logger.info("📊 Stage 1: Computer Vision - Extracting tables...")
+            
+            # Use standard extractor (returns proper format for NLP)
             tables = self.extractor.extract_tables()
             
             if not tables:
@@ -419,7 +449,8 @@ class TimetableExtractionService:
                         day_of_week=entry.get('day', 'monday'),
                         start_time=time_range.get('start_time'),
                         end_time=time_range.get('end_time'),
-                        duration_hours=round(time_range.get('duration_minutes', 60) / 60),  # Convert minutes to hours
+                        duration_minutes=time_range.get('duration_minutes', 60),
+                        duration_hours=round(time_range.get('duration_minutes', 60) / 60, 2),  # Exact decimal hours
                         
                         # Metadata
                         year_of_study=self.user.year_of_study,
@@ -468,16 +499,21 @@ class TimetableExtractionService:
         Returns:
             True if valid (after applying defaults), False only if completely empty
         """
-        # Must have unit name (or unit code as fallback)
-        unit_name = entry.get('unit_name')
-        if not unit_name:
-            # Try to use unit code as fallback
-            unit_code = entry.get('unit_code')
-            if unit_code:
-                entry['unit_name'] = unit_code
-            else:
-                logger.warning(f"⚠️ Entry has no unit name or code, skipping: {entry.get('raw_text', '')[:80]}")
-                return False
+        # Must have unit code
+        unit_code = entry.get('unit_code', '').strip()
+        if not unit_code:
+            logger.warning(f"⚠️ Entry missing unit_code, skipping")
+            return False
+        
+        # If unit_name is missing or identical to unit_code, set a placeholder
+        unit_name = entry.get('unit_name', '').strip()
+        
+        if not unit_name or unit_name == unit_code:
+            # Use unit code as the name if no name was extracted
+            # (better than having it empty)
+            entry['unit_name'] = unit_code
+            logger.debug(f"ℹ️ No separate unit name found for '{unit_code}', using code as name")
+        
         
         # Ensure time_range exists and is valid
         time_range = entry.get('time_range', {})

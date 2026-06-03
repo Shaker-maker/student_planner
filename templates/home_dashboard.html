@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Study Planner{% endblock %}
+
+{% block content %}
+<!-- Welcome Section -->
+<div class="mb-16">
+    <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg shadow-lg p-8 text-white">
+        <h1 class="text-4xl font-bold mb-2">
+            <i class="fas fa-graduation-cap"></i> Welcome back, {{ user.first_name }}!
+        </h1>
+        <p class="text-lg opacity-90">
+            {% now "W" as day %}
+            Here's your academic overview for today
+        </p>
+        {% if user.course %}
+        <p class="text-sm opacity-75 mt-2">
+            <i class="fas fa-book"></i> {{ user.course }} — Year {{ user.year_of_study }}
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Statistics -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
+    <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-600 text-sm font-semibold">Classes Scheduled</p>
+                <p class="text-4xl font-bold text-gray-800 mt-3">{{ stats.total_classes }}</p>
+            </div>
+            <div class="rounded-full p-5 text-center">
+                <i class="fas fa-calendar-alt text-gray-400 text-3xl"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-600 text-sm font-semibold">Total Tasks</p>
+                <p class="text-4xl font-bold text-gray-800 mt-3">{{ task_stats.total }}</p>
+            </div>
+            <div class="rounded-full p-5 text-center">
+                <i class="fas fa-tasks text-gray-400 text-3xl"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-600 text-sm font-semibold">Pending Tasks</p>
+                <p class="text-4xl font-bold text-gray-800 mt-3">{{ task_stats.pending }}</p>
+            </div>
+            <div class="rounded-full p-5 text-center">
+                <i class="fas fa-hourglass-end text-gray-400 text-3xl"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-600 text-sm font-semibold">PDFs Uploaded</p>
+                <p class="text-4xl font-bold text-gray-800 mt-3">{{ stats.total_pdfs }}</p>
+            </div>
+            <div class="rounded-full p-5 text-center">
+                <i class="fas fa-file-pdf text-gray-400 text-3xl"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+    <!-- Left Column: Quick Actions & Upcoming Tasks -->
+    <div class="lg:col-span-2 space-y-12">
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-8">
+                <i class="fas fa-bolt text-gray-600"></i> Quick Actions
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <a href="{% url 'timetable:dashboard' %}" class="bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-lg p-7 hover:shadow-lg transition transform hover:scale-105 flex items-center gap-5 group">
+                    <div class="bg-white bg-opacity-25 group-hover:bg-opacity-30 rounded-lg p-4">
+                        <i class="fas fa-calendar-alt text-3xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-lg">View Timetable</h3>
+                        <p class="text-sm opacity-90">{{ stats.total_classes }} classes</p>
+                    </div>
+                </a>
+                
+                <a href="{% url 'tasks:dashboard' %}" class="bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-lg p-7 hover:shadow-lg transition transform hover:scale-105 flex items-center gap-5 group">
+                    <div class="bg-white bg-opacity-25 group-hover:bg-opacity-30 rounded-lg p-4">
+                        <i class="fas fa-check-square text-3xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-lg">View All Tasks</h3>
+                        <p class="text-sm opacity-90">{{ task_stats.total }} tasks</p>
+                    </div>
+                </a>
+                
+                <a href="{% url 'tasks:add_task' %}" class="bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-lg p-7 hover:shadow-lg transition transform hover:scale-105 flex items-center gap-5 group">
+                    <div class="bg-white bg-opacity-25 group-hover:bg-opacity-30 rounded-lg p-4">
+                        <i class="fas fa-plus-circle text-3xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-lg">Add New Task</h3>
+                        <p class="text-sm opacity-90">Create a task quickly</p>
+                    </div>
+                </a>
+                
+                <a href="{% url 'timetable:upload_pdf' %}" class="text-white rounded-lg p-7 hover:shadow-lg transition transform hover:scale-105 flex items-center gap-5 group" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">
+                    <div class="bg-white bg-opacity-25 group-hover:bg-opacity-30 rounded-lg p-4">
+                        <i class="fas fa-cloud-upload-alt text-3xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-lg">Upload Timetable</h3>
+                        <p class="text-sm opacity-90">Extract from PDF</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Upcoming Tasks -->
+        {% if upcoming_tasks %}
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-bold text-gray-800">
+                    <i class="fas fa-tasks text-orange-600"></i> Upcoming Tasks
+                </h2>
+                <a href="{% url 'tasks:dashboard' %}" class="text-blue-600 hover:text-blue-800 font-semibold text-sm flex items-center gap-1">
+                    View all <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            
+            <div class="space-y-4">
+                {% for task in upcoming_tasks %}
+                <div class="flex items-center gap-4 p-5 bg-gray-50 rounded-lg hover:shadow-md transition border-l-4 border-gray-300">
+                    <div class="flex-shrink-0">
+                        {% if task.task_type == 'assignment' %}
+                            <div class="bg-blue-100 rounded-lg p-4">
+                                <i class="fas fa-file-alt text-blue-600 text-lg"></i>
+                            </div>
+                        {% else %}
+                            <div class="rounded-lg p-4" style="background-color: var(--primary-light);">
+                                <i class="fas fa-tasks text-lg" style="color: var(--primary);"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <a href="{% url 'tasks:detail' task.id %}" class="block">
+                            <h4 class="font-semibold text-gray-800 hover:text-blue-600">{{ task.name }}</h4>
+                            <div class="flex flex-wrap gap-2 mt-2 text-sm text-gray-600">
+                                <span><i class="fas fa-book"></i> {{ task.unit_name }}</span>
+                                <span class="text-gray-400">•</span>
+                                <span><i class="fas fa-calendar"></i> {{ task.due_date|date:"M d" }}</span>
+                                {% if task.days_left == 0 %}
+                                    <span class="inline-block bg-red-100 text-red-800 px-2 py-0.5 rounded text-xs font-semibold">Due Today</span>
+                                {% elif task.days_left == 1 %}
+                                    <span class="inline-block bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-xs font-semibold">Tomorrow</span>
+                                {% elif task.days_left <= 3 %}
+                                    <span class="inline-block bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-xs font-semibold">{{ task.days_left }}d left</span>
+                                {% endif %}
+                            </div>
+                        </a>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white rounded-lg shadow-lg p-10 text-center">
+            <i class="fas fa-inbox text-gray-300 text-5xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">No Upcoming Tasks</h3>
+            <p class="text-gray-600 mb-6">You're all caught up! Start organizing your work.</p>
+            <a href="{% url 'tasks:add_task' %}" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition font-semibold">
+                <i class="fas fa-plus-circle"></i> Add Your First Task
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Right Column: Task Summary & Weekly Overview -->
+    <div class="lg:col-span-1 space-y-12">
+        <!-- Task Summary -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-8">
+                <i class="fas fa-chart-pie text-gray-600"></i> Task Summary
+            </h2>
+            
+            <div class="space-y-5">
+                <!-- Pending -->
+                <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-hourglass-end text-yellow-600 text-xl"></i>
+                        <span class="text-gray-800 font-semibold">Pending</span>
+                    </div>
+                    <span class="bg-yellow-500 text-white px-4 py-2 rounded-full text-sm font-bold">{{ task_stats.pending }}</span>
+                </div>
+                
+                <!-- Not Submitted -->
+                <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg border-l-4 border-red-400">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-times-circle text-red-600 text-xl"></i>
+                        <span class="text-gray-800 font-semibold">Not Submitted</span>
+                    </div>
+                    <span class="bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold">{{ task_stats.not_submitted }}</span>
+                </div>
+                
+                <!-- Completed -->
+                <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                        <span class="text-gray-800 font-semibold">Completed</span>
+                    </div>
+                    <span class="bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold">{{ task_stats.done }}</span>
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-8 border-t border-gray-200">
+                <a href="{% url 'tasks:dashboard' %}" class="block w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition text-center font-semibold">
+                    <i class="fas fa-arrow-right"></i> Manage Tasks
+                </a>
+            </div>
+        </div>
+        
+        <!-- Profile Reminder -->
+        {% if not user.year_of_study or not user.course %}
+        <div class="bg-white rounded-lg shadow-lg p-8 border-l-4 border-red-500">
+            <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2 text-lg">
+                <i class="fas fa-exclamation-triangle text-red-500"></i> Complete Your Profile
+            </h3>
+            <p class="text-sm text-gray-600 mb-6">
+                Your profile is incomplete. Update it to unlock all features and get personalized reminders.
+            </p>
+            <a href="{% url 'accounts:edit_profile' %}" class="block w-full bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 transition text-center font-semibold text-sm">
+                <i class="fas fa-user-edit"></i> Update Profile
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Toggle About Section Script -->
+<script>
+function toggleAbout() {
+    const content = document.getElementById('aboutContent');
+    const icon = document.getElementById('aboutToggleIcon');
+    
+    content.classList.toggle('hidden');
+    icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+// Remember About section state in localStorage
+document.addEventListener('DOMContentLoaded', function() {
+    const aboutContent = document.getElementById('aboutContent');
+    const aboutToggleIcon = document.getElementById('aboutToggleIcon');
+    
+    // Check if user has previously opened/closed the About section
+    const aboutIsOpen = localStorage.getItem('aboutSectionOpen');
+    if (aboutIsOpen === 'true') {
+        aboutContent.classList.remove('hidden');
+        aboutToggleIcon.style.transform = 'rotate(180deg)';
+    }
+});
+
+// Update localStorage when About section is toggled
+document.querySelector('button[onclick="toggleAbout()"]').addEventListener('click', function() {
+    const content = document.getElementById('aboutContent');
+    const isOpen = !content.classList.contains('hidden');
+    localStorage.setItem('aboutSectionOpen', isOpen);
+});
+</script>
+
+{% endblock %}
